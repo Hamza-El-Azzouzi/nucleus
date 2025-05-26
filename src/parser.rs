@@ -1,8 +1,8 @@
 #[derive(Debug)]
-pub enum Commande {
+pub enum Command {
     Echo(Vec<String>),
     Cd(Option<String>),
-    Ls(Vec<char>),
+    Ls(Vec<char>, Option<String>), // flags, optional path
     Pwd,
     Cat(Vec<String>),
     Rm(Vec<String>, bool),
@@ -11,70 +11,71 @@ pub enum Commande {
     Exit,
 }
 
-pub fn input_parser(input: String) -> Result<Commande, String> {
-    let commande: Vec<String> = input.trim().split_whitespace().map(String::from).collect();
+pub fn input_parser(input: String) -> Result<Command, String> {
+    let command: Vec<String> = input.trim().split_whitespace().map(String::from).collect();
 
-    if commande.is_empty() {
+    if command.is_empty() {
         return Err("No command entered".to_string());
     }
 
-    match commande[0].as_str() {
-        "echo" => Ok(Commande::Echo(commande[1..].to_vec())),
+    match command[0].as_str() {
+        "echo" => Ok(Command::Echo(command[1..].to_vec())),
 
         "cd" => {
-            let target = commande.get(1).cloned();
-            Ok(Commande::Cd(target))
+            let target = command.get(1).cloned();
+            Ok(Command::Cd(target))
         }
 
         "ls" => {
-            let flags = parse_ls_flags(&commande[1..])?;
-            Ok(Commande::Ls(flags))
+            let (flags, path) = parse_ls_flags(&command[1..])?;
+            Ok(Command::Ls(flags, path))
         }
 
-        "pwd" => Ok(Commande::Pwd),
+        "pwd" => Ok(Command::Pwd),
 
         "cat" => {
-            if commande.len() < 2 {
+            if command.len() < 2 {
                 Err("cat: missing file operand".to_string())
             } else {
-                Ok(Commande::Cat(commande[1..].to_vec()))
+                Ok(Command::Cat(command[1..].to_vec()))
             }
         }
 
         "rm" => {
-            let (recursive, files) = parse_rm_flags(&commande[1..])?;
+            let (recursive, files) = parse_rm_flags(&command[1..])?;
             if files.is_empty() {
                 Err("rm: missing operand".to_string())
             } else {
-                Ok(Commande::Rm(files, recursive))
+                Ok(Command::Rm(files, recursive))
             }
         }
 
         "mv" => {
-            if commande.len() < 3 {
+            if command.len() < 3 {
                 Err("mv: missing file operand".to_string())
             } else {
-                Ok(Commande::Mv(commande[1..].to_vec()))
+                Ok(Command::Mv(command[1..].to_vec()))
             }
         }
 
         "mkdir" => {
-            if commande.len() < 2 {
+            if command.len() < 2 {
                 Err("mkdir: missing operand".to_string())
             } else {
-                Ok(Commande::Mkdir(commande[1..].to_vec()))
+                Ok(Command::Mkdir(command[1..].to_vec()))
             }
         }
 
-        "exit" => Ok(Commande::Exit),
+        "exit" => Ok(Command::Exit),
 
-        _ => Err(format!("Command '{}' not found", commande[0])),
+        _ => Err(format!("Command '{}' not found", command[0])),
     }
 }
 
-fn parse_ls_flags(args: &[String]) -> Result<Vec<char>, String> {
+fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Option<String>), String> {
     let valid_flags = ['l', 'a', 'F'];
     let mut flags = Vec::new();
+    let mut path = None;
 
     for arg in args {
         if arg.starts_with('-') {
@@ -87,10 +88,16 @@ fn parse_ls_flags(args: &[String]) -> Result<Vec<char>, String> {
                     return Err(format!("ls: invalid option -- '{}'", ch));
                 }
             }
+        } else {
+            // If we already have a path, that's an error (ls should only take one path)
+            if path.is_some() {
+                return Err("ls: too many arguments".to_string());
+            }
+            path = Some(arg.clone());
         }
     }
 
-    Ok(flags)
+    Ok((flags, path))
 }
 
 fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
