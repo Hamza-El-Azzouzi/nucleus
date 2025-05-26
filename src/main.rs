@@ -11,8 +11,13 @@ fn main() {
 
         let _ = io::stdin().read_line(&mut input);
         match input_parser(input.to_string()) {
-           
-            Ok(Commande::Exit) => break,
+            Ok(Commande::Exit) => {
+                break;
+            }
+
+             Err(error) if error == "No command entered".to_string() => {
+                continue;
+            }
             Ok(command) => println!("{:?}", command),
             Err(err) => println!("Error: {}", err),
         }
