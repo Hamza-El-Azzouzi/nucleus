@@ -1,14 +1,19 @@
-use std::io;
-use std::io::Write;
+use std::io::{stdin, stdout, Write};
 use shell::parser::*;
 
 fn main() {
     loop {
         print!("$");
-        io::stdout().flush().expect("error happend while flushing");
+        stdout().flush().expect("error happend while flushing");
         let mut input = String::new();
 
-        let _ = io::stdin().read_line(&mut input);
+        let n = stdin().read_line(&mut input).unwrap();
+
+        if n == 0 {
+            println!();
+            break;
+        }
+
         match input_parser(input.to_string()) {
             Ok(Command::Exit) => {
                 break;
