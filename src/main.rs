@@ -1,4 +1,4 @@
-use std::io::{stdin, stdout, Write};
+use std::io::{ stdin, stdout, Write };
 use shell::parser::*;
 use shell::executor::execute;
 
@@ -19,11 +19,11 @@ fn main() {
             Ok(Command::Exit) => {
                 break;
             }
-
+            
+            Ok(command) => execute(command),
             Err(error) if error == "No command entered".to_string() => {
                 continue;
             }
-            Ok(command) => execute(command),
             Err(err) => println!("{}", err),
         }
     }

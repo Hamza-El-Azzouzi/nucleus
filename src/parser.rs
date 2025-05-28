@@ -4,6 +4,7 @@ pub enum Command {
     Cd(Option<String>),
     Ls(Vec<char>, Option<String>),
     Pwd,
+    Cp(Vec<String>),
     Cat(Vec<String>),
     Rm(Vec<String>, bool),
     Mv(Vec<String>),
@@ -12,7 +13,7 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    let command: Vec<String> = split(input);
+    let command: Vec<String> = input.trim().split_whitespace().map(String::from).collect();
 
     if command.is_empty() {
         return Err("No command entered".to_string());
@@ -65,6 +66,13 @@ pub fn input_parser(input: String) -> Result<Command, String> {
                 Ok(Command::Mkdir(command[1..].to_vec()))
             }
         }
+        "cp" => {
+            if command.len() < 3 {
+                Err("cp: missing file operand".to_string())
+            } else {
+                Ok(Command::Cp(command[1..].to_vec()))
+            }
+        }
 
         "exit" => Ok(Command::Exit),
 
@@ -115,33 +123,33 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 
     Ok((recursive, files))
 }
-fn split(command: String) -> Vec<String> {
-    let mut res = Vec::new();
-    let mut word = String::new();
-    let mut in_quotes = false;
-    let mut chars = command.chars().peekable();
+// fn split(command: String) -> Vec<String> {
+//     let mut res = Vec::new();
+//     let mut word = String::new();
+//     let mut in_quotes = false;
+//     let mut chars = command.chars().peekable();
 
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => {
-                in_quotes = !in_quotes;
-                // Don't include the quote character itself
-            }
-            ' ' if !in_quotes => {
-                if !word.is_empty() {
-                    res.push(word.clone());
-                    word.clear();
-                }
-            }
-            _ => {
-                word.push(c);
-            }
-        }
-    }
+//     while let Some(c) = chars.next() {
+//         match c {
+//             '"' => {
+//                 in_quotes = !in_quotes;
+//                 // Don't include the quote character itself
+//             }
+//             ' ' if !in_quotes => {
+//                 if !word.is_empty() {
+//                     res.push(word.clone());
+//                     word.clear();
+//                 }
+//             }
+//             _ => {
+//                 word.push(c);
+//             }
+//         }
+//     }
 
-    if !word.is_empty() {
-        res.push(word);
-    }
+//     if !word.is_empty() {
+//         res.push(word);
+//     }
 
-    res
-}
+//     res
+// }
