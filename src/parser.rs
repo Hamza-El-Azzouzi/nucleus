@@ -2,7 +2,7 @@
 pub enum Command {
     Echo(Vec<String>),
     Cd(Option<String>),
-    Ls(Vec<char>, Option<String>), // flags, optional path
+    Ls(Vec<char>, Option<String>),
     Pwd,
     Cat(Vec<String>),
     Rm(Vec<String>, bool),
@@ -89,7 +89,6 @@ fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Option<String>), String
                 }
             }
         } else {
-            // If we already have a path, that's an error (ls should only take one path)
             if path.is_some() {
                 return Err("ls: too many arguments".to_string());
             }
