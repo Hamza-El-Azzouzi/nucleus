@@ -12,7 +12,7 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    let command: Vec<String> = input.trim().split_whitespace().map(String::from).collect();
+    let command: Vec<String> = split(input);
 
     if command.is_empty() {
         return Err("No command entered".to_string());
@@ -115,4 +115,34 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
     }
 
     Ok((recursive, files))
+}
+fn split(command: String) -> Vec<String> {
+    let mut res = Vec::new();
+    let mut word = String::new();
+    let mut in_quotes = false;
+    let mut chars = command.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        match c {
+            '"' => {
+                in_quotes = !in_quotes;
+                // Don't include the quote character itself
+            }
+            ' ' if !in_quotes => {
+                if !word.is_empty() {
+                    res.push(word.clone());
+                    word.clear();
+                }
+            }
+            _ => {
+                word.push(c);
+            }
+        }
+    }
+
+    if !word.is_empty() {
+        res.push(word);
+    }
+
+    res
 }

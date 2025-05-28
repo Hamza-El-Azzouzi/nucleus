@@ -11,7 +11,7 @@ fn main() {
 
         let _ = io::stdin().read_line(&mut input);
         match input_parser(input.to_string()) {
-            Ok(Commande::Exit) => {
+            Ok(Command::Exit) => {
                 break;
             }
 
