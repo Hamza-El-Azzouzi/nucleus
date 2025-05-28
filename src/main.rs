@@ -1,5 +1,6 @@
 use std::io::{stdin, stdout, Write};
 use shell::parser::*;
+use shell::executor::execute;
 
 fn main() {
     loop {
@@ -19,11 +20,11 @@ fn main() {
                 break;
             }
 
-             Err(error) if error == "No command entered".to_string() => {
+            Err(error) if error == "No command entered".to_string() => {
                 continue;
             }
-            Ok(command) => println!("{:?}", command),
-            Err(err) => println!("Error: {}", err),
+            Ok(command) => execute(command),
+            Err(err) => println!("{}", err),
         }
     }
 }
