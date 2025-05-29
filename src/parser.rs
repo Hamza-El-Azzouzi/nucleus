@@ -133,7 +133,7 @@ fn split(command:String) -> Vec<String> {
     while let Some(c) = chars.next() {
         match c {
             '"' => {
-                in_quotes = !in_quotes; // Toggle quote state
+                in_quotes = !in_quotes;
             }
             ' ' if !in_quotes => {
                 if !word.is_empty() {
