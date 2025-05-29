@@ -69,7 +69,11 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         }
         "cp" => {
             if command.len() < 3 {
-                Err("cp: missing file operand".to_string())
+                let mut err = format!("cp: missing file operand");
+                if command.len() == 2 {
+                    err = format!("cp: missing destination file operand after '{}'", command[1]);
+                } 
+                Err(err)
             } else {
                 Ok(Command::Cp(command[1..].to_vec()))
             }
@@ -133,7 +137,7 @@ fn split(command:String) -> Vec<String> {
     while let Some(c) = chars.next() {
         match c {
             '"' => {
-                in_quotes = !in_quotes; // Toggle quote state
+                in_quotes = !in_quotes;
             }
             ' ' if !in_quotes => {
                 if !word.is_empty() {
