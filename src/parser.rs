@@ -1,3 +1,4 @@
+use std::io::{ stdin, stdout, Write };
 #[derive(Debug)]
 pub enum Command {
     Echo(Vec<String>),
@@ -124,23 +125,66 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 
     Ok((recursive, files))
 }
-fn split(command:String) -> Vec<String> {
+
+pub fn split(mut command: String) -> Vec<String> {
     let mut result = Vec::new();
     let mut word = String::new();
     let mut in_quotes = false;
-    let mut chars = command.chars().peekable();
+    let mut first_line = true;
+    let mut chars = command.trim_end().chars().peekable();
 
     while let Some(c) = chars.next() {
         match c {
             '"' => {
-                in_quotes = !in_quotes;
+                if in_quotes {
+                    in_quotes = false;
+                    result.push(word.clone());
+                    word.clear();
+                } else {
+                    in_quotes = true;
+
+                    while let Some(c) = chars.next() {
+                        if c == '"' {
+                            in_quotes = false;
+                            break;
+                        } else {
+                            word.push(c);
+                        }
+                    }
+                    if first_line && in_quotes {
+                        word.push_str("\n");
+                        first_line = false;
+                    }
+                    while in_quotes {
+
+                        print!("> ");
+                        stdout().flush().unwrap();
+
+                        let mut extra = String::new();
+                        stdin().read_line(&mut extra).unwrap();
+
+                        for c in extra.chars() {
+                            if c == '"' {
+                                in_quotes = false;
+                                break;
+                            } else {
+                                word.push(c);
+                            }
+                        }
+                    }
+
+                    result.push(word.clone());
+                    word.clear();
+                }
             }
+
             ' ' if !in_quotes => {
                 if !word.is_empty() {
                     result.push(word.clone());
                     word.clear();
                 }
             }
+
             _ => {
                 word.push(c);
             }
@@ -153,4 +197,3 @@ fn split(command:String) -> Vec<String> {
 
     result
 }
-
