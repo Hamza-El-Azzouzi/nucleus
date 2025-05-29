@@ -14,7 +14,6 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    // let command: Vec<String> = input.trim().split_whitespace().map(String::from).collect();
     let command: Vec<String> = split(input.trim_end().to_string());
 
     if command.is_empty() {
@@ -167,7 +166,6 @@ pub fn split(mut command: String) -> Vec<String> {
 
         i += 1;
 
-        // End of current buffer and still inside quote
         if i == chars.len() && quote_char.is_some() {
             print!("> ");
             stdout().flush().unwrap();
