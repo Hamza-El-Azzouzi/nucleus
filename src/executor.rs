@@ -9,6 +9,7 @@ pub fn execute(command: Command) {
         Command::Ls(vec, op) => ls::ls(vec, op),
         Command::Mkdir(vec) => mkdir::mkdir(vec),
         Command::Mv(vec) => mv::mv(vec),
+        Command::Cp(vec) => cp::cp(vec),
         Command::Pwd => pwd::pwd(),
         Command::Rm(vec, recursive) => rm::rm(vec, recursive),
         _ => {}

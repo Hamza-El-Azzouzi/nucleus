@@ -1,3 +1,3 @@
-pub fn cp(){
+pub fn cp(vec:Vec<String>){
     
 }
