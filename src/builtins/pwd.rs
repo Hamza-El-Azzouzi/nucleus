@@ -1,5 +1,10 @@
 use std::env::current_dir;
 
 pub fn pwd() {
-    println!("{:?}", current_dir().unwrap().display());
+    match current_dir() {
+        Ok(path) => {
+            println!("{}", path.display());
+        }
+        Err(err) => println!("pwd: unexpected error: {}", err),
+    }
 }
