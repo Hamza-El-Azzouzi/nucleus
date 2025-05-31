@@ -1,4 +1,5 @@
-#[derive(Debug)]
+use std::io::{ stdin, stdout, Write };
+#[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),
     Cd(Option<String>),
@@ -13,7 +14,6 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    // let command: Vec<String> = input.trim().split_whitespace().map(String::from).collect();
     let command: Vec<String> = split(input.trim_end().to_string());
 
     if command.is_empty() {
@@ -124,33 +124,71 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 
     Ok((recursive, files))
 }
-fn split(command:String) -> Vec<String> {
+
+pub fn split(mut command: String) -> Vec<String> {
     let mut result = Vec::new();
     let mut word = String::new();
-    let mut in_quotes = false;
-    let mut chars = command.chars().peekable();
+    let mut quote_char: Option<char> = None;
+    let mut chars: Vec<char> = command.trim_end().chars().collect();
+    let mut i = 0;
+    let mut first_line = true;
 
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => {
-                in_quotes = !in_quotes; // Toggle quote state
-            }
-            ' ' if !in_quotes => {
-                if !word.is_empty() {
+    while i < chars.len() {
+        let c = chars[i];
+
+        match quote_char {
+            Some(q) => {
+                if c == q {
+                    quote_char = None;
                     result.push(word.clone());
                     word.clear();
+                } else {
+                    word.push(c);
                 }
             }
-            _ => {
-                word.push(c);
+            None => {
+                match c {
+                    '\'' | '"' => {
+                        quote_char = Some(c);
+                    }
+                    ' ' => {
+                        if !word.is_empty() {
+                            result.push(word.clone());
+                            word.clear();
+                        }
+                    }
+                    _ => {
+                        word.push(c);
+                    }
+                }
             }
+        }
+
+        i += 1;
+
+        if i == chars.len() && quote_char.is_some() {
+            print!("> ");
+            stdout().flush().unwrap();
+
+            let mut next_line = String::new();
+            if stdin().read_line(&mut next_line).unwrap() == 0 {
+                break;
+            }
+            if first_line {
+                word.push('\n');
+                first_line = false;
+            }
+
+            chars = next_line.chars().collect();
+            i = 0;
         }
     }
 
     if !word.is_empty() {
         result.push(word);
     }
-
+    if result[result.len()-1] == "\n" {
+        return result[0..result.len()-1].to_vec();
+    }
     result
 }
-
