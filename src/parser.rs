@@ -187,8 +187,8 @@ pub fn split(mut command: String) -> Vec<String> {
     if !word.is_empty() {
         result.push(word);
     }
-    if result[result.len()-1] == "\n" {
-        return result[0..result.len()-1].to_vec();
+    if result[result.len() - 1] == "\n" {
+        return result[0..result.len() - 1].to_vec();
     }
     result
 }
