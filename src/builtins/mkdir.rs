@@ -1,11 +1,6 @@
 use std::fs;
 
 pub fn mkdir(args: Vec<String>) {
-    if args.is_empty() {
-        println!("mkdir: missing operand");
-        return;
-    }
-
     let mut errors = Vec::new();
 
     for dir_name in args {
