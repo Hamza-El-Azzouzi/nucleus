@@ -1,6 +1,7 @@
 use std::fs::copy;
 use std::path::{Path, PathBuf};
-use std::env::current_dir;
+
+use super::pwd;
 
 pub fn cp(args: Vec<String>) {
     let src = args[0..args.len() - 1].to_vec();
@@ -16,16 +17,17 @@ pub fn cp(args: Vec<String>) {
 
     if !is_target_dir && one_file {
         let src_path = if Path::new(&src[0]).is_relative() {
-            current_dir().expect("Failed to get current directory").join(&src[0])
+            PathBuf::from(pwd::pwd()).join(&src[0])
         } else {
             PathBuf::from(&src[0])
         };
 
         let target_path = if Path::new(&target).is_relative() {
-            current_dir().expect("Failed to get current directory").join(&target)
+            PathBuf::from(pwd::pwd()).join(&target)
         } else {
             PathBuf::from(&target)
         };
+        
         if src_path == target_path {
             println!("cp: '{}' and '{}' are the same file", &src[0], &target);
             return;
