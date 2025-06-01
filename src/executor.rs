@@ -10,7 +10,7 @@ pub fn execute(command: Command) {
         Command::Mkdir(args) => mkdir::mkdir(args),
         Command::Mv(args) => mv::mv(args),
         Command::Cp(args) => cp::cp(args),
-        Command::Pwd => pwd::pwd(),
+        Command::Pwd => println!("{}",pwd::pwd()),
         Command::Rm(args, recursive) => rm::rm(args, recursive),
         _ => {}
     }

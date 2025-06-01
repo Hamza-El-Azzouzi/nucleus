@@ -1,10 +1,10 @@
-use std::env::current_dir;
+use std::{env::current_dir};
 
-pub fn pwd() {
+pub fn pwd() -> String{
     match current_dir() {
         Ok(path) => {
-            println!("{}", path.display());
+            return path.to_str().expect("msg").to_string();
         }
-        Err(err) => println!("pwd: unexpected error: {}", err),
+        Err(err) => format!("pwd: unexpected error: {}", err),
     }
 }
