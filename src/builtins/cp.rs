@@ -1,9 +1,9 @@
 use std::fs::copy;
 use std::path::Path;
 
-pub fn cp(vec: Vec<String>) {
-    let src = vec[0..vec.len() - 1].to_vec();
-    let target = vec.iter().last().expect("Vector should not be empty").clone();
+pub fn cp(args: Vec<String>) {
+    let src = args[0..args.len() - 1].to_vec();
+    let target = args.iter().last().expect("args should not be empty").clone();
     let is_target_dir = Path::new::<String>(&target).is_dir();
     let one_file = src.len() == 1 && Path::new::<String>(&src[0]).is_file();
     let is_source_exist = Path::new::<String>(&src[0]).exists();
