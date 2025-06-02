@@ -1,15 +1,15 @@
-use std::{env, fs, path::PathBuf};
+use std::{env, fs};
 
 pub fn rm(args: Vec<String>, recursive: bool) {
     if args.is_empty() {
-        println!("missing operand");
+        eprintln!("missing operand");
     }
 
     // get the current dir
     let cur_dir = match env::current_dir() {
         Ok(dir) => dir,
         Err(err) => {
-            println!("Error getting current directory: {}", err);
+            eprintln!("Error getting current directory: {}", err);
             return;
         }
     };
@@ -24,10 +24,24 @@ pub fn rm(args: Vec<String>, recursive: bool) {
 
         if path.is_file() {
             if let Err(err) = fs::remove_file(&path) {
-                println!("Failed to remove file '{}': {}", elem, err);
+                eprintln!("rm: Failed to remove file '{}': {}", elem, err);
                 return;
             }
         } else if path.is_dir() {
+            if recursive {
+                if let Err(err) = fs::remove_dir_all(&path) {
+                    eprintln!("rm: fFailed to remove file '{}': {}", elem, err);
+                    return;
+                }
+            } else {
+                eprintln!(
+                    "rm: cannot remove '{}': Is a directory. Use -r to remove recursively.",
+                    elem
+                );
+                return;
+            }
+        } else {
+            eprintln!("rm: cannot remove '{}'", elem);
         }
     }
 }
