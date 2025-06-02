@@ -1,3 +1,3 @@
-pub fn ls(vec: Vec<char>, op: Option<String>){
-      println!("{:?} {:?}",vec,op);
+pub fn ls(args: Vec<char>, path: Option<String>){
+      println!("{:?} {:?}",args,path);
 }
