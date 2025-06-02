@@ -1,3 +1,5 @@
 pub fn rm(args: Vec<String>, recursive: bool) {
-    println!("{:?} {}", args, recursive);
+    if args.is_empty() {
+        println!("missing operand");
+    }
 }
