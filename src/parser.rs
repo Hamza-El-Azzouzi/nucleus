@@ -1,4 +1,4 @@
-use std::io::{ stdin, stdout, Write };
+use std::io::{Write, stdin, stdout};
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),
@@ -14,7 +14,7 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    let command: Vec<String> = split(input.trim_end().to_string());
+    let command: Vec<String> = split(input.trim_end());
 
     if command.is_empty() {
         return Err("No command entered".to_string());
@@ -69,7 +69,14 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         }
         "cp" => {
             if command.len() < 3 {
-                Err("cp: missing file operand".to_string())
+                let mut err = "cp: missing file operand".to_string();
+                if command.len() == 2 {
+                    err = format!(
+                        "cp: missing destination file operand after '{}'",
+                        command[1]
+                    );
+                }
+                Err(err)
             } else {
                 Ok(Command::Cp(command[1..].to_vec()))
             }
@@ -125,7 +132,7 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
     Ok((recursive, files))
 }
 
-pub fn split(mut command: String) -> Vec<String> {
+pub fn split(command: &str) -> Vec<String> {
     let mut result = Vec::new();
     let mut word = String::new();
     let mut quote_char: Option<char> = None;
@@ -146,22 +153,20 @@ pub fn split(mut command: String) -> Vec<String> {
                     word.push(c);
                 }
             }
-            None => {
-                match c {
-                    '\'' | '"' => {
-                        quote_char = Some(c);
-                    }
-                    ' ' => {
-                        if !word.is_empty() {
-                            result.push(word.clone());
-                            word.clear();
-                        }
-                    }
-                    _ => {
-                        word.push(c);
+            None => match c {
+                '\'' | '"' => {
+                    quote_char = Some(c);
+                }
+                ' ' => {
+                    if !word.is_empty() {
+                        result.push(word.clone());
+                        word.clear();
                     }
                 }
-            }
+                _ => {
+                    word.push(c);
+                }
+            },
         }
 
         i += 1;
@@ -187,8 +192,8 @@ pub fn split(mut command: String) -> Vec<String> {
     if !word.is_empty() {
         result.push(word);
     }
-    if result[result.len()-1] == "\n" {
-        return result[0..result.len()-1].to_vec();
+    if result.len() > 1 && result[result.len() - 1] == "\n" {
+        return result[0..result.len() - 1].to_vec();
     }
     result
 }

@@ -1,3 +1,3 @@
-pub fn mv(vec: Vec<String>){
-    
+pub fn mv(args: Vec<String>){
+    println!("{:?}", args);
 }
