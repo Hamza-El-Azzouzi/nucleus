@@ -5,7 +5,11 @@ use super::pwd;
 
 pub fn cp(args: Vec<String>) {
     let src = args[0..args.len() - 1].to_vec();
-    let target = args.iter().last().expect("args should not be empty").clone();
+    let target = args
+        .iter()
+        .last()
+        .expect("args should not be empty")
+        .clone();
     let is_target_dir = Path::new::<String>(&target).is_dir();
     let one_file = src.len() == 1 && Path::new::<String>(&src[0]).is_file();
     let is_source_exist = Path::new::<String>(&src[0]).exists();
@@ -27,7 +31,7 @@ pub fn cp(args: Vec<String>) {
         } else {
             PathBuf::from(&target)
         };
-        
+
         if src_path == target_path {
             println!("cp: '{}' and '{}' are the same file", &src[0], &target);
             return;
@@ -50,15 +54,15 @@ pub fn cp(args: Vec<String>) {
                 println!("cp: cannot stat '{}': No such file or directory", s);
                 continue;
             }
-            
+
             if path.is_dir() {
                 println!("cp: -r not specified; omitting directory '{}'", s);
                 continue;
             }
-            
+
             let mut dist = target.clone();
             dist.push('/');
-        
+
             match path.file_name() {
                 Some(filename) => {
                     dist.push_str(&filename.to_string_lossy());
