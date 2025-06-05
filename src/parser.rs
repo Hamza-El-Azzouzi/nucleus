@@ -54,7 +54,14 @@ pub fn input_parser(input: String) -> Result<Command, String> {
 
         "mv" => {
             if command.len() < 3 {
-                Err("mv: missing file operand".to_string())
+                let mut err = "mv: missing file operand".to_string();
+                if command.len() == 2 {
+                    err = format!(
+                        "mv: missing destination file operand after '{}'",
+                        command[1]
+                    );
+                }
+                Err(err)
             } else {
                 Ok(Command::Mv(command[1..].to_vec()))
             }
