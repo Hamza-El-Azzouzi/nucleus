@@ -16,33 +16,33 @@ pub fn rm(args: Vec<String>, recursive: bool) {
                 "rm: refusing to remove '.' or '..' directory: skipping '{}'",
                 elem
             );
-            return;
+            continue;
         }
 
         // check if the elements of the args are valid and exist
         let path = cur_dir.join(&elem);
         if !path.exists() {
             eprintln!("rm: cannot remove '{}': No such file or directory", elem);
-            return;
+            continue;
         }
 
         if path.is_file() {
             if let Err(err) = fs::remove_file(&path) {
                 eprintln!("rm: Failed to remove file '{}': {}", elem, err);
-                return;
+                continue;
             }
         } else if path.is_dir() {
             if recursive {
                 if let Err(err) = fs::remove_dir_all(&path) {
                     eprintln!("rm: Failed to remove file '{}': {}", elem, err);
-                    return;
+                    continue;
                 }
             } else {
                 eprintln!(
                     "rm: cannot remove '{}': Is a directory. Use -r to remove recursively.",
                     elem
                 );
-                return;
+                continue;
             }
         } else {
             eprintln!("rm: cannot remove '{}'", elem);
