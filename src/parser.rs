@@ -2,7 +2,7 @@ use std::io::{Write, stdin, stdout};
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),
-    Cd(Option<String>),
+    Cd(Vec<String>),
     Ls(Vec<char>, Option<String>),
     Pwd,
     Cp(Vec<String>),
@@ -24,8 +24,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         "echo" => Ok(Command::Echo(command[1..].to_vec())),
 
         "cd" => {
-            let target = command.get(1).cloned();
-            Ok(Command::Cd(target))
+            Ok(Command::Cd(command[1..].to_vec()))
         }
 
         "ls" => {
