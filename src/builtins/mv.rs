@@ -73,7 +73,7 @@ fn move_multiple_sources(sources: &[String], dest: &Path) {
         if !source_path.exists() {
             errors.push(format!(
                 "mv: cannot stat '{}': No such file or directory",
-                source_path.to_str().unwrap()
+                source_path.display()
             ));
         }
 
