@@ -3,15 +3,15 @@ use crate::parser::Command;
 
 pub fn execute(command: Command) {
     match command {
-        Command::Cat(vec) => cat::cat(vec),
-        Command::Cd(op) => cd::cd(op),
-        Command::Echo(vec) => echo::echo(vec),
-        Command::Ls(vec, op) => ls::ls(vec, op),
-        Command::Mkdir(vec) => mkdir::mkdir(vec),
-        Command::Mv(vec) => mv::mv(vec),
-        Command::Cp(vec) => cp::cp(vec),
-        Command::Pwd => pwd::pwd(),
-        Command::Rm(vec, recursive) => rm::rm(vec, recursive),
+        Command::Cat(args) => cat::cat(args),
+        Command::Cd(path) => cd::cd(path),
+        Command::Echo(args) => echo::echo(args),
+        Command::Ls(args, path) => ls::ls(args, path),
+        Command::Mkdir(args) => mkdir::mkdir(args),
+        Command::Mv(args) => mv::mv(args),
+        Command::Cp(args) => cp::cp(args),
+        Command::Pwd => println!("{}",pwd::pwd()),
+        Command::Rm(args, recursive) => rm::rm(args, recursive),
         _ => {}
     }
 }

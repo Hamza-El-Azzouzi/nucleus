@@ -1,3 +1,3 @@
-pub fn cat(vec: Vec<String>){
-    
+pub fn cat(args: Vec<String>) {
+    println!("{:?}", args);
 }

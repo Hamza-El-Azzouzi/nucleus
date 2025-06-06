@@ -1,3 +1,3 @@
-pub fn cd(op: Option<String>){
-
+pub fn cd(path: Option<String>) {
+    println!("{:?}", path);
 }
