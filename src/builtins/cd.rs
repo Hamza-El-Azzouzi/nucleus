@@ -3,7 +3,7 @@ use std::{env, path::Path};
 pub fn cd(args: Vec<String>) {
     match args.len() {
         0 => change_to_home(),
-        1 => match args[0].as_str() {
+        _ => match args[0].as_str() {
             "-" => change_to_previous(),
             "~" => change_to_home(),
             path if path.starts_with("~/") => match env::var("HOME") {
@@ -15,7 +15,6 @@ pub fn cd(args: Vec<String>) {
             },
             path => change_dir(path),
         },
-        _ => println!("cd: too many arguments"),
     }
 }
 
