@@ -146,34 +146,60 @@ pub fn split(command: &str) -> Vec<String> {
     let mut chars: Vec<char> = command.trim_end().chars().collect();
     let mut i = 0;
     let mut first_line = true;
-
+    let mut escape_next = false;
     while i < chars.len() {
         let c = chars[i];
 
-        match quote_char {
-            Some(q) => {
-                if c == q {
-                    quote_char = None;
-                    result.push(word.clone());
-                    word.clear();
-                } else {
-                    word.push(c);
-                }
-            }
-            None => match c {
-                '\'' | '"' => {
-                    quote_char = Some(c);
-                }
-                ' ' => {
-                    if !word.is_empty() {
+        if escape_next {
+            word.push(c);
+            escape_next = false;
+        } else {
+            match quote_char {
+                Some(q) => {
+                    if c == '\\' {
+                        if i + 1 < chars.len() && (chars[i + 1] == q || chars[i + 1] == '\\') {
+                            escape_next = true;
+                        } else {
+                            word.push(c);
+                        }
+                    } else if c == q {
+                        quote_char = None;
                         result.push(word.clone());
                         word.clear();
+                    } else {
+                        word.push(c);
                     }
                 }
-                _ => {
-                    word.push(c);
-                }
-            },
+                None => match c {
+                    '\\' => {
+                        if i + 1 == chars.len() {
+                            print!("> ");
+                            stdout().flush().unwrap();
+                            let mut next_line = String::new();
+                            if stdin().read_line(&mut next_line).unwrap() == 0 {
+                                break;
+                            }
+                            chars = next_line.trim_end().chars().collect();
+                            i = 0;
+                            continue;
+                        } else {
+                            escape_next = true;
+                        }
+                    }
+                    '\'' | '"' => {
+                        quote_char = Some(c);
+                    }
+                    ' ' => {
+                        if !word.is_empty() {
+                            result.push(word.clone());
+                            word.clear();
+                        }
+                    }
+                    _ => {
+                        word.push(c);
+                    }
+                },
+            }
         }
 
         i += 1;
