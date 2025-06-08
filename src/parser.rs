@@ -89,7 +89,15 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             }
         }
 
-        "exit" => Ok(Command::Exit),
+        "exit" => {
+            if command.len() > 1 {
+                let err = format!("exit: Illegal number: {}", command[1]);
+
+                Err(err)
+            } else {
+                Ok(Command::Exit)
+            }
+        }
 
         _ => Err(format!("Command '{}' not found", command[0])),
     }
@@ -155,23 +163,17 @@ pub fn split(command: &str) -> Vec<String> {
             escape_next = false;
         } else {
             match quote_char {
-                Some(q) => {
-                    if c == '\\' {
-                        if i + 1 < chars.len() && (chars[i + 1] == q || chars[i + 1] == '\\') {
-                            escape_next = true;
-                        } else {
-                            word.push(c);
-                        }
-                    } else if c == q {
-                        quote_char = None;
-                        result.push(word.clone());
-                        word.clear();
-                    } else {
-                        word.push(c);
-                    }
-                }
+                 Some(q) => {
+        if c == q {
+            quote_char = None;
+            result.push(word.clone());
+            word.clear();
+        } else {
+            word.push(c);
+        }
+    }
                 None => match c {
-                    '\\' => {
+                    '\\'   => {
                         if i + 1 == chars.len() {
                             print!("> ");
                             stdout().flush().unwrap();
@@ -189,7 +191,7 @@ pub fn split(command: &str) -> Vec<String> {
                     '\'' | '"' => {
                         quote_char = Some(c);
                     }
-                    ' ' => {
+                    c if c.is_whitespace() => {
                         if !word.is_empty() {
                             result.push(word.clone());
                             word.clear();
