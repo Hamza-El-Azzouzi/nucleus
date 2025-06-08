@@ -28,3 +28,46 @@ fn main() {
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+   #[test]
+fn test_basic_words() {
+    assert_eq!(split("echo hello world"), vec!["echo", "hello", "world"]);
+}
+
+#[test]
+fn test_escaped_newline() {
+    assert_eq!(split("echo a\\\na"), vec!["echo", "ana"]);
+}
+
+#[test]
+fn test_multiple_backslashes_before_newline() {
+    assert_eq!(split("echo a\\\\\\na"), vec!["echo", "a\\a"]);
+    assert_eq!(split("echo a\\\\\\\\na"), vec!["echo", "a\\\\na"]);
+}
+
+#[test]
+fn test_double_quoted_string() {
+    assert_eq!(split("echo \"aaaa\""), vec!["echo", "aaaa"]);
+    assert_eq!(split("echo \"aa\\n aa\""), vec!["echo", "aa\\n aa"]);
+    assert_eq!(split("echo \"aa\\\\n aa\""), vec!["echo", "aa\\\\n aa"]);
+    assert_eq!(split("echo \"aa\\\" aa\""), vec!["echo", "aa\" aa"]);
+}
+
+#[test]
+fn test_single_quoted_string() {
+    assert_eq!(split("echo 'aaaa'"), vec!["echo", "aaaa"]);
+    assert_eq!(split("echo 'aa\\n aa'"), vec!["echo", "aa\\n aa"]);
+    assert_eq!(split("echo 'aa\\\\n aa'"), vec!["echo", "aa\\\\n aa"]);
+    assert_eq!(split("echo 'aa\\' aa'"), vec!["echo", "aa\\' aa"]);
+}
+
+#[test]
+fn test_mixed_arguments() {
+    assert_eq!(split("echo \"hello\"world"), vec!["echo", "helloworld"]);
+    assert_eq!(split("echo 'hello'world"), vec!["echo", "helloworld"]);
+}
+
+}

@@ -91,9 +91,8 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         }
 
         "exit" => {
-            if command.len() > 1 && !command[1].parse::<isize>().is_ok(){
+            if command.len() > 1 && command[1].parse::<isize>().is_err(){
                 let err = format!("exit: Illegal number: {}", command[1]);
-
                 Err(err)
             } else {
                 Ok(Command::Exit)
@@ -149,30 +148,53 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 }
 
 pub fn split(command: &str) -> Vec<String> {
+
     let mut result = Vec::new();
     let mut word = String::new();
     let mut quote_char: Option<char> = None;
-    let mut chars: Vec<char> = command.trim_end().chars().collect();
+    let mut chars: Vec<char> = command.chars().collect();
     let mut i = 0;
-    let mut first_line = true;
     let mut escape_next = false;
+    let mut first_line = true;
+
     while i < chars.len() {
         let c = chars[i];
 
         if escape_next {
-            word.push(c);
+            if c != '\n' {
+                word.push(c);
+            }
             escape_next = false;
         } else {
             match quote_char {
-                Some(q) => {
-                    if c == q {
+                Some(q) => match c {
+                    '\\' => {
+                        if q == '"' {
+                            if i + 1 < chars.len() {
+                                let next = chars[i + 1];
+                                match next {
+                                    '\\' | '"' | '\n' => {
+                                        i += 1;
+                                        if next != '\n' {
+                                            word.push(next);
+                                        }
+                                    }
+                                    _ => word.push('\\'),
+                                }
+                            } else {
+                                word.push('\\');
+                            }
+                        } else {
+                            word.push('\\');
+                        }
+                    }
+                    _ if c == q => {
                         quote_char = None;
                         result.push(word.clone());
                         word.clear();
-                    } else {
-                        word.push(c);
                     }
-                }
+                    _ => word.push(c),
+                },
                 None => match c {
                     '\\' => {
                         if i + 1 == chars.len() {
@@ -182,9 +204,7 @@ pub fn split(command: &str) -> Vec<String> {
                             if stdin().read_line(&mut next_line).unwrap() == 0 {
                                 break;
                             }
-                            chars = next_line.trim_end().chars().collect();
-                            i = 0;
-                            continue;
+                            chars.extend(next_line.chars());
                         } else {
                             escape_next = true;
                         }
@@ -210,7 +230,6 @@ pub fn split(command: &str) -> Vec<String> {
         if i == chars.len() && quote_char.is_some() {
             print!("> ");
             stdout().flush().unwrap();
-
             let mut next_line = String::new();
             if stdin().read_line(&mut next_line).unwrap() == 0 {
                 break;
@@ -219,18 +238,13 @@ pub fn split(command: &str) -> Vec<String> {
                 word.push('\n');
                 first_line = false;
             }
-
-            chars = next_line.chars().collect();
-            i = 0;
+            chars.extend(next_line.chars());
         }
     }
 
     if !word.is_empty() {
         result.push(word);
     }
-    println!("{:?}",result);
-    if result.len() > 1 && result[result.len() - 1] == "\n" {
-        return result[0..result.len() - 1].to_vec();
-    }
+
     result
 }
