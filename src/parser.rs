@@ -1,4 +1,5 @@
 use std::io::{Write, stdin, stdout};
+use std::string::String;
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),
@@ -90,7 +91,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         }
 
         "exit" => {
-            if command.len() > 1 {
+            if command.len() > 1 && !command[1].parse::<isize>().is_ok(){
                 let err = format!("exit: Illegal number: {}", command[1]);
 
                 Err(err)
@@ -163,17 +164,17 @@ pub fn split(command: &str) -> Vec<String> {
             escape_next = false;
         } else {
             match quote_char {
-                 Some(q) => {
-        if c == q {
-            quote_char = None;
-            result.push(word.clone());
-            word.clear();
-        } else {
-            word.push(c);
-        }
-    }
+                Some(q) => {
+                    if c == q {
+                        quote_char = None;
+                        result.push(word.clone());
+                        word.clear();
+                    } else {
+                        word.push(c);
+                    }
+                }
                 None => match c {
-                    '\\'   => {
+                    '\\' => {
                         if i + 1 == chars.len() {
                             print!("> ");
                             stdout().flush().unwrap();
@@ -227,6 +228,7 @@ pub fn split(command: &str) -> Vec<String> {
     if !word.is_empty() {
         result.push(word);
     }
+    println!("{:?}",result);
     if result.len() > 1 && result[result.len() - 1] == "\n" {
         return result[0..result.len() - 1].to_vec();
     }
