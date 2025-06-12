@@ -24,9 +24,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
     match command[0].as_str() {
         "echo" => Ok(Command::Echo(command[1..].to_vec())),
 
-        "cd" => {
-            Ok(Command::Cd(command[1..].to_vec()))
-        }
+        "cd" => Ok(Command::Cd(command[1..].to_vec())),
 
         "ls" => {
             let (flags, path) = parse_ls_flags(&command[1..])?;
@@ -35,13 +33,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
 
         "pwd" => Ok(Command::Pwd),
 
-        "cat" => {
-            if command.len() < 2 {
-                Err("cat: missing file operand".to_string())
-            } else {
-                Ok(Command::Cat(command[1..].to_vec()))
-            }
-        }
+        "cat" => Ok(Command::Cat(command[1..].to_vec())),
 
         "rm" => {
             let (recursive, files) = parse_rm_flags(&command[1..])?;
@@ -90,7 +82,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         }
 
         "exit" => {
-            if command.len() > 1 && command[1].parse::<isize>().is_err(){
+            if command.len() > 1 && command[1].parse::<isize>().is_err() {
                 let err = format!("exit: Illegal number: {}", command[1]);
                 Err(err)
             } else {
@@ -147,7 +139,6 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 }
 
 pub fn split(command: &str) -> Vec<String> {
-
     let mut result = Vec::new();
     let mut word = String::new();
     let mut quote_char: Option<char> = None;
