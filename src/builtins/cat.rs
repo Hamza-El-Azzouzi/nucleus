@@ -1,7 +1,21 @@
 use super::pwd;
 use std::fs;
+use std::io::{self, BufRead};
 use std::path::{Path, PathBuf};
 pub fn cat(files: Vec<String>) {
+    if files.is_empty() {
+        let stdin = io::stdin();
+        for line in stdin.lock().lines() {
+            match line {
+                Ok(content) => println!("{}", content),
+                Err(err) => {
+                    println!("cat: failed to read from stdin: {}", err);
+                    break;
+                }
+            }
+        }
+        return;
+    }
     for file in files {
         let is_dir = Path::new::<String>(&file).is_dir();
         if is_dir {
