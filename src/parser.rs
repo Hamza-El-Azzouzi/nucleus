@@ -1,10 +1,11 @@
 use std::io::{Write, stdin, stdout};
+use std::path::PathBuf;
 use std::string::String;
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),
     Cd(Vec<String>),
-    Ls(Vec<char>, Option<String>),
+    Ls(Vec<char>, Vec<PathBuf>, Vec<PathBuf>),
     Pwd,
     Cp(Vec<String>),
     Cat(Vec<String>),
@@ -27,8 +28,8 @@ pub fn input_parser(input: String) -> Result<Command, String> {
         "cd" => Ok(Command::Cd(command[1..].to_vec())),
 
         "ls" => {
-            let (flags, path) = parse_ls_flags(&command[1..])?;
-            Ok(Command::Ls(flags, path))
+            let (flags, directories, files) = parse_ls_flags(&command[1..])?;
+            Ok(Command::Ls(flags, directories, files))
         }
 
         "pwd" => Ok(Command::Pwd),
@@ -94,10 +95,11 @@ pub fn input_parser(input: String) -> Result<Command, String> {
     }
 }
 
-fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Option<String>), String> {
+fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Vec<PathBuf>, Vec<PathBuf>), String> {
     let valid_flags = ['l', 'a', 'F'];
     let mut flags = Vec::new();
-    let mut path = None;
+    let mut directories: Vec<PathBuf> = Vec::new();
+    let mut files: Vec<PathBuf> = Vec::new();
 
     for arg in args {
         if arg.starts_with('-') {
@@ -111,14 +113,25 @@ fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Option<String>), String
                 }
             }
         } else {
-            if path.is_some() {
-                return Err("ls: too many arguments".to_string());
+            let path = PathBuf::from(arg);
+            if path.is_dir() {
+                directories.push(path);
+            } else if path.is_file() {
+                files.push(path);
+            } else {
+                return Err(format!(
+                    "cannot access {:?}: No such file or directory",
+                    arg
+                ));
             }
-            path = Some(arg.clone());
         }
     }
 
-    Ok((flags, path))
+    if directories.is_empty() && files.is_empty() {
+        directories.push(PathBuf::from("."));
+    }
+
+    Ok((flags, directories, files))
 }
 
 fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {

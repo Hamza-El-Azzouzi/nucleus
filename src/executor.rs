@@ -6,7 +6,7 @@ pub fn execute(command: Command) {
         Command::Cat(args) => cat::cat(args),
         Command::Cd(path) => cd::cd(path),
         Command::Echo(args) => echo::echo(args),
-        Command::Ls(args, path) => ls::ls(args, path),
+        Command::Ls(flags, directories, files) => ls::ls(flags, directories, files),
         Command::Mkdir(args) => mkdir::mkdir(args),
         Command::Mv(args) => mv::mv(args),
         Command::Cp(args) => cp::cp(args),
