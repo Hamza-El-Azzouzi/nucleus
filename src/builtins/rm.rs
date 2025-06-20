@@ -11,7 +11,7 @@ pub fn rm(args: Vec<String>, recursive: bool) {
     };
 
     for elem in args {
-        if elem.eq(".") || elem.eq("..") {
+        if elem.eq(".") || elem.eq("..") || elem.eq("./.") || elem.eq("./..") {
             eprintln!(
                 "rm: refusing to remove '.' or '..' directory: skipping '{}'",
                 elem
