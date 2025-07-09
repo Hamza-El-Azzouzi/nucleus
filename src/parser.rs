@@ -17,7 +17,6 @@ pub enum Command {
 
 pub fn input_parser(input: String) -> Result<Command, String> {
     let command: Vec<String> = split(input.trim_end());
-
     if command.is_empty() {
         return Err("No command entered".to_string());
     }
@@ -134,15 +133,15 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 }
 
 pub fn split(command: &str) -> Vec<String> {
-    // println!("{command}");
     let mut result = Vec::new();
     let mut word = String::new();
     let mut quote_char: Option<char> = None;
     let mut chars: Vec<char> = command.chars().collect();
-    // println!("{chars:?}");
     let mut i = 0;
     let mut escape_next = false;
     let mut first_line = true;
+    let mut quoted_words = Vec::new(); // Track if each word was quoted
+    let mut word_was_quoted = false;
 
     while i < chars.len() {
         let c = chars[i];
@@ -179,9 +178,14 @@ pub fn split(command: &str) -> Vec<String> {
                         _ if c == q => {
                             quote_char = None;
                             result.push(word.clone());
+                            quoted_words.push(true); // Mark as quoted
                             word.clear();
+                            word_was_quoted = false;
                         }
-                        _ => word.push(c),
+                        _ => {
+                            word.push(c);
+                            word_was_quoted = true;
+                        }
                     }
                 None =>
                     match c {
@@ -209,11 +213,14 @@ pub fn split(command: &str) -> Vec<String> {
                         }
                         '\'' | '"' => {
                             quote_char = Some(c);
+                            word_was_quoted = true;
                         }
                         c if c.is_whitespace() => {
                             if !word.is_empty() {
                                 result.push(word.clone());
+                                quoted_words.push(word_was_quoted);
                                 word.clear();
+                                word_was_quoted = false;
                             }
                         }
                         _ => {
@@ -251,12 +258,19 @@ pub fn split(command: &str) -> Vec<String> {
 
     if !word.is_empty() {
         result.push(word);
+        quoted_words.push(word_was_quoted);
     }
+
     result
         .into_iter()
-        .map(|cmd| {
-            if cmd == "~" {
-                env::var("HOME").unwrap_or(cmd)
+        .zip(quoted_words)
+        .map(|(cmd, quoted)| {
+            if
+                !quoted &&
+                cmd.starts_with('~') &&
+                (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
+            {
+                if let Ok(home) = env::var("HOME") { format!("{}{}", home, &cmd[1..]) } else { cmd }
             } else {
                 cmd
             }

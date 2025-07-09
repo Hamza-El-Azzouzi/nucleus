@@ -30,7 +30,7 @@ pub fn cat(files: Vec<String>) {
 
         let file_result = fs::read_to_string(file_path);
         match file_result {
-            Ok(file_content) => println!("{file_content}"),
+            Ok(file_content) => print!("{file_content}"),
             Err(_) => println!("cat: {file}: No such file or directory"),
         }
     }
