@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{env, fs, path::Path};
 
 pub fn rm(args: Vec<String>, recursive: bool) {
     // get the current dir
@@ -10,8 +10,39 @@ pub fn rm(args: Vec<String>, recursive: bool) {
         }
     };
 
+    let parent_dir = match cur_dir.parent() {
+        Some(dir) => dir,
+        None => Path::new(""),
+    };
+
     for elem in args {
-        if elem.eq(".") || elem.eq("..") || elem.eq("./.") || elem.eq("./..") {
+        let path = cur_dir.join(&elem);
+
+        let canonical_path = match path.canonicalize() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("rm: failed to get canonical path for '{}': {}", elem, e);
+                continue;
+            }
+        };
+
+        let canonical_current = match cur_dir.canonicalize() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("rm: failed to get current canonical path: {}", e);
+                continue;
+            }
+        };
+
+        let canonical_parent = match parent_dir.canonicalize() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("rm: failed to get parent canonical path: {}", e);
+                continue;
+            }
+        };
+
+        if canonical_path == canonical_current || canonical_path == canonical_parent {
             eprintln!(
                 "rm: refusing to remove '.' or '..' directory: skipping '{}'",
                 elem
