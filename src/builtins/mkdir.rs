@@ -5,7 +5,7 @@ pub fn mkdir(args: Vec<String>) {
 
     for dir_name in args {
         if let Err(err) = fs::create_dir(&dir_name) {
-            errors.push(format!("mkdir: {}: {}", dir_name, err));
+            errors.push(format!("mkdir: {dir_name}: {err}"));
         }
     }
 

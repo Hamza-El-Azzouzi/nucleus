@@ -1,4 +1,5 @@
-use std::io::{Write, stdin, stdout};
+use std::env;
+use std::io::{ Write, stdin, stdout };
 use std::string::String;
 #[derive(Debug, PartialEq)]
 pub enum Command {
@@ -48,10 +49,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "mv: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!(
-                        "mv: missing destination file operand after '{}'",
-                        command[1]
-                    );
+                    err = format!("mv: missing destination file operand after '{}'", command[1]);
                 }
                 Err(err)
             } else {
@@ -70,10 +68,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "cp: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!(
-                        "cp: missing destination file operand after '{}'",
-                        command[1]
-                    );
+                    err = format!("cp: missing destination file operand after '{}'", command[1]);
                 }
                 Err(err)
             } else {
@@ -107,7 +102,7 @@ fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Option<String>), String
                         flags.push(ch);
                     }
                 } else {
-                    return Err(format!("ls: invalid option -- '{}'", ch));
+                    return Err(format!("ls: invalid option -- '{ch}'"));
                 }
             }
         } else {
@@ -129,7 +124,7 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
         if arg == "-r" {
             recursive = true;
         } else if arg.starts_with('-') {
-            return Err(format!("rm: invalid option '{}'", arg));
+            return Err(format!("rm: invalid option '{arg}'"));
         } else {
             files.push(arg.clone());
         }
@@ -139,10 +134,12 @@ fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
 }
 
 pub fn split(command: &str) -> Vec<String> {
+    // println!("{command}");
     let mut result = Vec::new();
     let mut word = String::new();
     let mut quote_char: Option<char> = None;
     let mut chars: Vec<char> = command.chars().collect();
+    // println!("{chars:?}");
     let mut i = 0;
     let mut escape_next = false;
     let mut first_line = true;
@@ -157,61 +154,72 @@ pub fn split(command: &str) -> Vec<String> {
             escape_next = false;
         } else {
             match quote_char {
-                Some(q) => match c {
-                    '\\' => {
-                        if q == '"' {
-                            if i + 1 < chars.len() {
-                                let next = chars[i + 1];
-                                match next {
-                                    '\\' | '"' | '\n' => {
-                                        i += 1;
-                                        if next != '\n' {
-                                            word.push(next);
+                Some(q) =>
+                    match c {
+                        '\\' => {
+                            if q == '"' {
+                                if i + 1 < chars.len() {
+                                    let next = chars[i + 1];
+                                    match next {
+                                        '\\' | '"' | '\n' => {
+                                            i += 1;
+                                            if next != '\n' {
+                                                word.push(next);
+                                            }
                                         }
+                                        _ => word.push('\\'),
                                     }
-                                    _ => word.push('\\'),
+                                } else {
+                                    word.push('\\');
                                 }
                             } else {
                                 word.push('\\');
                             }
-                        } else {
-                            word.push('\\');
                         }
-                    }
-                    _ if c == q => {
-                        quote_char = None;
-                        result.push(word.clone());
-                        word.clear();
-                    }
-                    _ => word.push(c),
-                },
-                None => match c {
-                    '\\' => {
-                        if i + 1 == chars.len() {
-                            print!("> ");
-                            stdout().flush().unwrap();
-                            let mut next_line = String::new();
-                            if stdin().read_line(&mut next_line).unwrap() == 0 {
-                                break;
-                            }
-                            chars.extend(next_line.chars());
-                        } else {
-                            escape_next = true;
-                        }
-                    }
-                    '\'' | '"' => {
-                        quote_char = Some(c);
-                    }
-                    c if c.is_whitespace() => {
-                        if !word.is_empty() {
+                        _ if c == q => {
+                            quote_char = None;
                             result.push(word.clone());
                             word.clear();
                         }
+                        _ => word.push(c),
                     }
-                    _ => {
-                        word.push(c);
+                None =>
+                    match c {
+                        '\\' => {
+                            if i + 1 == chars.len() {
+                                print!("> ");
+                                if let Err(e) = stdout().flush() {
+                                    eprintln!("Failed to flush stdout: {e}");
+                                    break;
+                                }
+                                let mut next_line = String::new();
+                                match stdin().read_line(&mut next_line) {
+                                    Ok(0) => {
+                                        break;
+                                    }
+                                    Ok(_) => chars.extend(next_line.chars()),
+                                    Err(e) => {
+                                        eprintln!("Failed to read line: {e}");
+                                        break;
+                                    }
+                                }
+                            } else {
+                                escape_next = true;
+                            }
+                        }
+                        '\'' | '"' => {
+                            quote_char = Some(c);
+                        }
+                        c if c.is_whitespace() => {
+                            if !word.is_empty() {
+                                result.push(word.clone());
+                                word.clear();
+                            }
+                        }
+                        _ => {
+                            word.push(c);
+                        }
                     }
-                },
             }
         }
 
@@ -219,22 +227,39 @@ pub fn split(command: &str) -> Vec<String> {
 
         if i == chars.len() && quote_char.is_some() {
             print!("> ");
-            stdout().flush().unwrap();
-            let mut next_line = String::new();
-            if stdin().read_line(&mut next_line).unwrap() == 0 {
+            if let Err(e) = stdout().flush() {
+                eprintln!("Failed to flush stdout: {e}");
                 break;
+            }
+            let mut next_line = String::new();
+            match stdin().read_line(&mut next_line) {
+                Ok(0) => {
+                    break;
+                }
+                Ok(_) => chars.extend(next_line.chars()),
+                Err(e) => {
+                    eprintln!("Failed to read line: {e}");
+                    break;
+                }
             }
             if first_line {
                 word.push('\n');
                 first_line = false;
             }
-            chars.extend(next_line.chars());
         }
     }
 
     if !word.is_empty() {
         result.push(word);
     }
-
     result
+        .into_iter()
+        .map(|cmd| {
+            if cmd == "~" {
+                env::var("HOME").unwrap_or(cmd)
+            } else {
+                cmd
+            }
+        })
+        .collect()
 }
