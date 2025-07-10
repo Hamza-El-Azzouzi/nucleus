@@ -1,7 +1,6 @@
 use std::{env, fs};
 
 pub fn rm(args: Vec<String>, recursive: bool) {
-    // get the current dir
     let cur_dir = match env::current_dir() {
         Ok(dir) => dir,
         Err(err) => {
@@ -11,7 +10,7 @@ pub fn rm(args: Vec<String>, recursive: bool) {
     };
 
     for elem in args {
-        if elem.eq(".") || elem.eq("..") || elem.eq("./.") || elem.eq("./..") {
+        if elem.chars().all(|c| c == '.' || c == '/') {
             eprintln!(
                 "rm: refusing to remove '.' or '..' directory: skipping '{}'",
                 elem
@@ -19,7 +18,6 @@ pub fn rm(args: Vec<String>, recursive: bool) {
             continue;
         }
 
-        // check if the elements of the args are valid and exist
         let path = cur_dir.join(&elem);
         if !path.exists() {
             eprintln!("rm: cannot remove '{}': No such file or directory", elem);
