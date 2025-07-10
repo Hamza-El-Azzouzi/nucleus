@@ -43,7 +43,7 @@ pub fn cp(args: Vec<String>) {
     }
 
     if !is_target_dir && src.len() > 1 {
-        println!("cp: target '{}' is not a directory", target);
+        println!("cp: target '{target}' is not a directory");
         return;
     }
 
@@ -51,12 +51,12 @@ pub fn cp(args: Vec<String>) {
         for s in src {
             let path = Path::new(&s);
             if !path.exists() {
-                println!("cp: cannot stat '{}': No such file or directory", s);
+                println!("cp: cannot stat '{s}': No such file or directory");
                 continue;
             }
 
             if path.is_dir() {
-                println!("cp: -r not specified; omitting directory '{}'", s);
+                println!("cp: -r not specified; omitting directory '{s}'");
                 continue;
             }
 
@@ -68,13 +68,13 @@ pub fn cp(args: Vec<String>) {
                     dist.push_str(&filename.to_string_lossy());
                 }
                 None => {
-                    println!("cp: cannot determine filename for '{}'", s);
+                    println!("cp: cannot determine filename for '{s}'");
                     continue;
                 }
             }
 
             if let Err(e) = copy(path, &dist) {
-                println!("cp: cannot copy '{}' to '{}': {}", s, dist, e);
+                println!("cp: cannot copy '{s}' to '{dist}': {e}");
             }
         }
     }

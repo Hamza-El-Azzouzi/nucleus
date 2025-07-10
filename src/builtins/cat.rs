@@ -1,15 +1,15 @@
 use super::pwd;
 use std::fs;
-use std::io::{self, BufRead};
-use std::path::{Path, PathBuf};
+use std::io::{ self, BufRead };
+use std::path::{ Path, PathBuf };
 pub fn cat(files: Vec<String>) {
     if files.is_empty() {
         let stdin = io::stdin();
         for line in stdin.lock().lines() {
             match line {
-                Ok(content) => println!("{}", content),
+                Ok(content) => println!("{content}"),
                 Err(err) => {
-                    println!("cat: failed to read from stdin: {}", err);
+                    println!("cat: failed to read from stdin: {err}");
                     break;
                 }
             }
@@ -19,7 +19,7 @@ pub fn cat(files: Vec<String>) {
     for file in files {
         let is_dir = Path::new::<String>(&file).is_dir();
         if is_dir {
-            println!("cat: {}: Is a directory", file);
+            println!("cat: {file}: Is a directory");
             continue;
         }
         let file_path = if Path::new(&file).is_relative() {
@@ -30,8 +30,8 @@ pub fn cat(files: Vec<String>) {
 
         let file_result = fs::read_to_string(file_path);
         match file_result {
-            Ok(file_content) => println!("{file_content}"),
-            Err(_) => println!("cat: {}: No such file or directory", file),
+            Ok(file_content) => print!("{file_content}"),
+            Err(_) => println!("cat: {file}: No such file or directory"),
         }
     }
 }
