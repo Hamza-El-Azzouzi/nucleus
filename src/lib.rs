@@ -3,3 +3,4 @@ pub mod parser;
 pub mod executor;
 pub mod utils;
 pub mod errors;
+pub mod color;
