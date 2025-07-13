@@ -5,9 +5,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::color::{
-    Color, colorize, colorize_device, colorize_dir, colorize_executable, colorize_pipe,
-    colorize_socket, colorize_symlink,
+use crate::{
+    color::{
+        Color, colorize, colorize_device, colorize_dir, colorize_executable, colorize_pipe,
+        colorize_socket, colorize_symlink,
+    },
+    utils::strip_ansi_codes,
 };
 
 use super::{file_info::get_detailed_file_info, parser::Flag};
@@ -60,12 +63,9 @@ pub fn format_detailed_file_info(
         let max_width = max_lens.get(&i).copied().unwrap_or(0);
 
         if i == path.len() - 1 {
-            if *quote_exist {
-                if !(info.starts_with("'") && info.ends_with("'"))
-                    && !(info.starts_with("\'") && info.ends_with("\'"))
-                {
-                    result.push_str(" ");
-                }
+            let name = strip_ansi_codes(info);
+            if *quote_exist && !name.starts_with("'") && !name.starts_with("\"") {
+                result.push(' ');
             }
 
             result.push_str(info);
@@ -100,8 +100,7 @@ pub fn format_path(path: &PathBuf, file_name: &mut String, flags: &Flag) -> Resu
         colorize_pipe(file_name, flags);
     } else if file_type.is_socket() {
         colorize_socket(file_name, flags);
-    }
-    if path.is_symlink() {
+    } else if path.is_symlink() {
         return format_symlink(path, file_name, flags);
     } else if path.is_dir() {
         colorize_dir(file_name, flags);

@@ -134,10 +134,8 @@ impl LsOutput {
 
         if flags.l {
             for path in result.iter() {
-                let name = &path[path.len() - 1];
-                if (name.starts_with("'") && name.ends_with("'"))
-                    || (name.starts_with("\"") && name.ends_with("\""))
-                {
+                let name = strip_ansi_codes(&path[path.len() - 1]);
+                if name.starts_with("'") || name.starts_with("\"") {
                     quote_exist = true;
                 }
                 for (i, field) in path.iter().enumerate() {
