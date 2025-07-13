@@ -26,7 +26,7 @@ pub fn add_dot_entries(
 
     if flags.l {
         let dot_path = dir.join(PathBuf::from("."));
-        let dotdot_path = dir.join(PathBuf::from("."));
+        let dotdot_path = dir.join(PathBuf::from(".."));
 
         let mut dot_info = get_detailed_file_info(&dot_path, Some(total_blocks), max_len, flags)?;
         let mut dotdot_info =
@@ -80,8 +80,17 @@ pub fn format_path(path: &PathBuf, file_name: &mut String, flags: &Flag) -> Resu
     let metadata = path
         .symlink_metadata()
         .map_err(|e| format!("cannot access '{}': {}", path.display(), e))?;
-
     let mode = metadata.permissions().mode();
+
+    if flags.f {
+        let file_type = metadata.file_type();
+        if file_type.is_fifo() {
+            file_name.push('|');
+        } else if file_type.is_socket() {
+            file_name.push('=');
+        }
+    }
+
 
     if path.is_symlink() {
         return format_symlink(path, file_name, flags);

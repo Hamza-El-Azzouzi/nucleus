@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use regex::Regex;
 use terminal_size::{Width, terminal_size};
+
+use crate::utils::strip_ansi_codes;
 
 use super::{Directory, formatter::format_detailed_file_info, parser::Flag};
 
@@ -43,11 +44,6 @@ impl LsOutput {
         }
     }
 
-    fn strip_ansi_codes(s: &str) -> String {
-        let re = Regex::new(r"\x1b\[[0-9;]*m").unwrap();
-        re.replace_all(s, "").to_string()
-    }
-
     fn format_result(result: &Vec<Vec<String>>, term_width: usize) -> String {
         if result.is_empty() {
             return String::new();
@@ -57,7 +53,7 @@ impl LsOutput {
             .iter()
             .map(|s| {
                 let name = s.first().cloned().unwrap_or_default();
-                let clean_len = Self::strip_ansi_codes(&name).len();
+                let clean_len = strip_ansi_codes(&name).len();
                 (name, clean_len)
             })
             .collect();
