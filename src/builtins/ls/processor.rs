@@ -27,7 +27,8 @@ impl LsProcessor {
 
         for file in files {
             if flags.l {
-                let info = get_detailed_file_info(&file, None, max_len, flags)?;
+                let mut file_name = file.to_string_lossy().to_string();
+                let info = get_detailed_file_info(&file, &mut file_name, None, max_len, flags)?;
                 file_result.push(info);
             } else {
                 let mut name = file
@@ -35,6 +36,7 @@ impl LsProcessor {
                     .ok_or_else(|| format!("ls: Invalid UTF-8 path: {}", file.display()))?
                     .to_string();
                 quote_if_needed(&mut name);
+                format_path(&file, &mut name, flags)?;
                 file_result.push(vec![name]);
             }
         }
@@ -119,7 +121,19 @@ impl LsProcessor {
         for entry in paths {
             let path = entry.path();
             if flags.l {
-                match get_detailed_file_info(&path, Some(total_blocks), max_len, flags) {
+                let mut file_name = path
+                    .file_name()
+                    .and_then(|s| s.to_str())
+                    .map(|s| s.to_string())
+                    .or_else(|| Some(path.to_string_lossy().to_string()))
+                    .ok_or_else(|| format!("Unable to get file name for path: {:?}", path))?;
+                match get_detailed_file_info(
+                    &path,
+                    &mut file_name,
+                    Some(total_blocks),
+                    max_len,
+                    flags,
+                ) {
                     Ok(info) => dir_entry_result.push(info),
                     Err(e) => {
                         eprintln!("{}", e);

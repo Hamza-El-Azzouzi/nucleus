@@ -14,6 +14,7 @@ use super::{file_permissions::get_permissions, formatter::format_path, parser::F
 
 pub fn get_detailed_file_info(
     path: &PathBuf,
+    file_name: &mut String,
     total_blocks: Option<&mut u64>,
     max_len: &mut usize,
     flags: &Flag,
@@ -40,10 +41,8 @@ pub fn get_detailed_file_info(
         *max_len = size.len();
     }
 
-    let mut file_name = path.to_string_lossy().to_string();
-
-    quote_if_needed(&mut file_name);
-    format_path(path, &mut file_name, flags)?;
+    quote_if_needed(file_name);
+    format_path(path, file_name, flags)?;
 
     let (user_owner, group_owner) = get_owners_info(&metadata)
         .map_err(|e| format!("cannot access '{}': {}", path.display(), e))?;
@@ -63,7 +62,7 @@ pub fn get_detailed_file_info(
         group_owner,
         size,
         modified_at,
-        file_name,
+        (*file_name).to_string(),
     ])
 }
 
