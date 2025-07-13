@@ -13,7 +13,7 @@ use crate::builtins::ls::file_permissions::get_major_minor;
 use super::{file_permissions::get_permissions, formatter::format_path, parser::Flag};
 
 pub fn get_detailed_file_info(
-    path: &PathBuf,
+    path: PathBuf,
     file_name: &mut String,
     total_blocks: Option<&mut u64>,
     max_len: &mut usize,
@@ -23,7 +23,7 @@ pub fn get_detailed_file_info(
         .symlink_metadata()
         .map_err(|e| format!("cannot access metadata of '{}': {}", path.display(), e))?;
 
-    let permission = get_permissions(&metadata, &path);
+    let permission = get_permissions(&metadata, path.to_path_buf());
 
     let size = if metadata.file_type().is_char_device() || metadata.file_type().is_block_device() {
         let (major, minor) = get_major_minor(&metadata);
@@ -41,7 +41,7 @@ pub fn get_detailed_file_info(
         *max_len = size.len();
     }
 
-    format_path(path, file_name, flags)?;
+    format_path(path.to_path_buf(), file_name, flags)?;
 
     let (user_owner, group_owner) = get_owners_info(&metadata)
         .map_err(|e| format!("cannot access '{}': {}", path.display(), e))?;
@@ -95,7 +95,7 @@ fn get_owners_info(metadata: &Metadata) -> Result<(String, String), String> {
         let username = if !passwd.is_null() {
             CStr::from_ptr((*passwd).pw_name)
                 .to_str()
-                .map_err(|_| format!("Invalid UTF-8 in group name for UID({})", uid))?
+                .map_err(|_| format!("Invalid UTF-8 in group name for UID({uid})"))?
                 .to_string()
         } else {
             uid.to_string()
@@ -105,7 +105,7 @@ fn get_owners_info(metadata: &Metadata) -> Result<(String, String), String> {
         let groupname = if !group.is_null() {
             CStr::from_ptr((*group).gr_name)
                 .to_str()
-                .map_err(|_| format!("Invalid UTF-8 in group name for GID({})", gid))?
+                .map_err(|_| format!("Invalid UTF-8 in group name for GID({gid})"))?
                 .to_string()
         } else {
             gid.to_string()

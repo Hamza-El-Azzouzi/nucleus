@@ -29,7 +29,7 @@ impl LsProcessor {
             if flags.l {
                 let mut file_name = file.to_string_lossy().to_string();
                 quote_if_needed(&mut file_name);
-                let info = get_detailed_file_info(&file, &mut file_name, None, max_len, flags)?;
+                let info = get_detailed_file_info(file, &mut file_name, None, max_len, flags)?;
                 file_result.push(info);
             } else {
                 let mut name = file
@@ -37,7 +37,7 @@ impl LsProcessor {
                     .ok_or_else(|| format!("ls: Invalid UTF-8 path: {}", file.display()))?
                     .to_string();
                 quote_if_needed(&mut name);
-                format_path(&file, &mut name, flags)?;
+                format_path(file, &mut name, flags)?;
                 file_result.push(vec![name]);
             }
         }
@@ -59,13 +59,13 @@ impl LsProcessor {
 
             if flags.a {
                 add_dot_entries(
-                    dir,
+                    dir.to_path_buf(),
                     &mut dir_entry_result,
                     &mut total_blocks,
                     &mut max_len,
                     flags,
                 )
-                .map_err(|e| format!("ls: Failed to add dot entries: {}", e))?;
+                .map_err(|e| format!("ls: Failed to add dot entries: {e}"))?;
             }
 
             Self::process_directory_entries(
@@ -127,11 +127,11 @@ impl LsProcessor {
                     .and_then(|s| s.to_str())
                     .map(|s| s.to_string())
                     .or_else(|| Some(path.to_string_lossy().to_string()))
-                    .ok_or_else(|| format!("Unable to get file name for path: {:?}", path))?;
+                    .ok_or_else(|| format!("Unable to get file name for path: {path:?}"))?;
                 quote_if_needed(&mut file_name);
 
                 match get_detailed_file_info(
-                    &path,
+                    path,
                     &mut file_name,
                     Some(total_blocks),
                     max_len,
@@ -139,7 +139,7 @@ impl LsProcessor {
                 ) {
                     Ok(info) => dir_entry_result.push(info),
                     Err(e) => {
-                        eprintln!("{}", e);
+                        eprintln!("{e}");
                         continue;
                     }
                 }
@@ -151,7 +151,7 @@ impl LsProcessor {
                     .to_string();
 
                 quote_if_needed(&mut name);
-                format_path(&path, &mut name, flags)?;
+                format_path(path, &mut name, flags)?;
 
                 dir_entry_result.push(vec![name]);
             }

@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-pub fn get_permissions(metadata: &Metadata, path: &PathBuf) -> String {
+pub fn get_permissions(metadata: &Metadata, path: PathBuf) -> String {
     let mode = metadata.permissions().mode();
     let mut permissions = String::new();
 
@@ -41,7 +41,7 @@ pub fn get_permissions(metadata: &Metadata, path: &PathBuf) -> String {
         (false, false) => '-',
     });
 
-    if has_acl(path) {
+    if has_acl(path.to_path_buf()) {
         permissions.push('+');
     }
 
@@ -68,7 +68,7 @@ fn get_file_type(metadata: &Metadata) -> char {
     }
 }
 
-fn has_acl(path: &PathBuf) -> bool {
+fn has_acl(path: PathBuf) -> bool {
     use std::ffi::CString;
     use std::os::raw::c_char;
 

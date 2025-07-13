@@ -10,8 +10,8 @@ pub struct LsOutput;
 
 impl LsOutput {
     pub fn print_results(
-        file_result: &Vec<Vec<String>>,
-        dir_results: &Vec<Directory>,
+        file_result: &[Vec<String>],
+        dir_results: &[Directory],
         directories_length: &usize,
         files_length: &usize,
         max_files_len: &usize,
@@ -19,7 +19,7 @@ impl LsOutput {
     ) {
         // Print files
         if !file_result.is_empty() {
-            let mut file_result_clone = file_result.clone();
+            let mut file_result_clone = file_result.to_vec();
             Self::print(&mut file_result_clone, max_files_len, flags);
             if !dir_results.is_empty() {
                 println!();
@@ -44,7 +44,7 @@ impl LsOutput {
         }
     }
 
-    fn format_result(result: &Vec<Vec<String>>, term_width: usize) -> String {
+    fn format_result(result: &[Vec<String>], term_width: usize) -> String {
         if result.is_empty() {
             return String::new();
         }
@@ -127,7 +127,7 @@ impl LsOutput {
         result
     }
 
-    fn print(result: &mut Vec<Vec<String>>, max_size_len: &usize, flags: &Flag) {
+    fn print(result: &mut [Vec<String>], max_size_len: &usize, flags: &Flag) {
         let mut max_lens: HashMap<usize, usize> = HashMap::new();
 
         let mut quote_exist: bool = false;

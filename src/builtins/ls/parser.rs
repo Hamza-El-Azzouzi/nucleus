@@ -26,8 +26,7 @@ impl Flag {
                         'l' => flags.l = true,
                         _ => {
                             return Err(format!(
-                                "invalid flag: '{}', supported flags are: '-a', '-F', '-l'",
-                                ch
+                                "invalid flag: '{ch}', supported flags are: '-a', '-F', '-l'"
                             ));
                         }
                     }
@@ -39,10 +38,7 @@ impl Flag {
                 } else if path.symlink_metadata().is_ok() {
                     files.push(path);
                 } else {
-                    return Err(format!(
-                        "cannot access {:?}: No such file or directory",
-                        arg
-                    ));
+                    return Err(format!("cannot access {arg:?}: No such file or directory"));
                 }
             }
         }

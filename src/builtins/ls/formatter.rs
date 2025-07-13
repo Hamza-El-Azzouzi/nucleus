@@ -16,7 +16,7 @@ use crate::{
 use super::{file_info::get_detailed_file_info, parser::Flag};
 
 pub fn add_dot_entries(
-    dir: &PathBuf,
+    dir: PathBuf,
     result: &mut Vec<Vec<String>>,
     total_blocks: &mut u64,
     max_len: &mut usize,
@@ -30,9 +30,9 @@ pub fn add_dot_entries(
         let dotdot_path = dir.join(PathBuf::from(".."));
 
         let mut dot_info =
-            get_detailed_file_info(&dot_path, &mut dot, Some(total_blocks), max_len, flags)?;
+            get_detailed_file_info(dot_path, &mut dot, Some(total_blocks), max_len, flags)?;
         let mut dotdot_info = get_detailed_file_info(
-            &dotdot_path,
+            dotdot_path,
             &mut dotdot,
             Some(total_blocks),
             max_len,
@@ -53,7 +53,7 @@ pub fn add_dot_entries(
 
 pub fn format_detailed_file_info(
     max_lens: &HashMap<usize, usize>,
-    path: &Vec<String>,
+    path: &[String],
     max_size_len: &usize,
     quote_exist: &bool,
 ) -> String {
@@ -70,26 +70,26 @@ pub fn format_detailed_file_info(
 
             result.push_str(info);
         } else if i == 1 {
-            result.push_str(&format!("{:>width$} ", info, width = max_width));
+            result.push_str(&format!("{info:>max_width$} "));
         } else if i == 4 {
             if info.contains(",") {
                 let parts: Vec<&str> = info.split(',').collect();
                 let spaces_to_add = max_size_len - info.len();
-                let spaces: String = std::iter::repeat(' ').take(spaces_to_add).collect();
+                let spaces: String = " ".repeat(spaces_to_add);
                 let formatted = format!("{}, {}{}", parts[0].trim(), spaces, parts[1].trim());
-                result.push_str(&format!("{:>width$} ", formatted, width = max_width));
+                result.push_str(&format!("{formatted:>max_width$} "));
             } else {
-                result.push_str(&format!("{:>width$} ", info, width = max_width));
+                result.push_str(&format!("{info:>max_width$} "));
             }
         } else {
-            result.push_str(&format!("{:<width$} ", info, width = max_width));
+            result.push_str(&format!("{info:<max_width$} "));
         }
     }
 
     result
 }
 
-pub fn format_path(path: &PathBuf, file_name: &mut String, flags: &Flag) -> Result<(), String> {
+pub fn format_path(path: PathBuf, file_name: &mut String, flags: &Flag) -> Result<(), String> {
     let metadata = path
         .symlink_metadata()
         .map_err(|e| format!("cannot access '{}': {}", path.display(), e))?;
@@ -101,7 +101,7 @@ pub fn format_path(path: &PathBuf, file_name: &mut String, flags: &Flag) -> Resu
     } else if file_type.is_socket() {
         colorize_socket(file_name, flags);
     } else if path.is_symlink() {
-        return format_symlink(path, file_name, flags);
+        return format_symlink(&path, file_name, flags);
     } else if path.is_dir() {
         colorize_dir(file_name, flags);
         return Ok(());
@@ -151,7 +151,7 @@ fn format_symlink(path: &Path, file_name: &mut String, flags: &Flag) -> Result<(
                     colorize_executable(&mut target_str, flags);
                 }
             } else {
-                let _ = format_path(&full_target_path, &mut target_str, flags);
+                let _ = format_path(full_target_path, &mut target_str, flags);
             }
 
             file_name.push_str(" -> ");
