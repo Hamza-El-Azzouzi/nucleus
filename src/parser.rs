@@ -16,7 +16,7 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    let command: Vec<String> = split(input.trim_end());
+    let command: Vec<String> = split(&input);
     if command.is_empty() {
         return Err("No command entered".to_string());
     }
@@ -196,6 +196,7 @@ pub fn split(command: &str) -> Vec<String> {
                                     i += 2;
                                     continue;
                                 } else {
+                                    println!("{c}");
                                     escape_next = true;
                                 }
                             }
@@ -219,11 +220,14 @@ pub fn split(command: &str) -> Vec<String> {
 
             i += 1;
         }
-        let has_backslash_continuation =
-            chars
-                .iter()
-                .rev()
-                .find(|&&c| c != '\n') == Some(&'\\');
+        let mut rev_chars = chars
+            .iter()
+            .rev()
+            .filter(|&&c| c != '\n');
+        let last = rev_chars.next();
+        let second_last = rev_chars.next();
+
+        let has_backslash_continuation = last == Some(&'\\') && second_last != Some(&'\\');
         let has_unclosed_quote = quote_char.is_some();
         let needs_continuation = has_backslash_continuation || has_unclosed_quote;
         if needs_continuation {
@@ -246,8 +250,8 @@ pub fn split(command: &str) -> Vec<String> {
                             continue;
                         }
 
-                        let trimmed = next_line.trim_end_matches('\n');
-                        chars.extend(trimmed.chars());
+                        // let trimmed = next_line.trim_end_matches('\n');
+                        chars.extend(next_line.chars());
                     } else {
                         word.push('\n');
 

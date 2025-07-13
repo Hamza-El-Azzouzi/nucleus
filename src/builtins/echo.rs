@@ -8,10 +8,12 @@ pub fn echo(args: Vec<String>) {
         .map(|arg| process_escape(arg))
         .collect::<Vec<String>>()
         .join(" ");
-    if parsed_args.chars().nth(parsed_args.len()-1).unwrap() != '\n'{
+    if parsed_args.len() < 2 || !parsed_args.ends_with("\n\n") {
         parsed_args.push('\n');
+        print!("{parsed_args}");
+        return;
     }
-    print!("{parsed_args}" );
+    print!("{parsed_args}");
 }
 
 fn process_escape(arg: &str) -> String {
