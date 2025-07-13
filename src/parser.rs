@@ -1,11 +1,12 @@
 use std::env;
-use std::io::{ Write, stdin, stdout };
+use std::io::{Write, stdin, stdout};
+
 use std::string::String;
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),
     Cd(Vec<String>),
-    Ls(Vec<char>, Option<String>),
+    Ls(Vec<String>),
     Pwd,
     Cp(Vec<String>),
     Cat(Vec<String>),
@@ -26,10 +27,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
 
         "cd" => Ok(Command::Cd(command[1..].to_vec())),
 
-        "ls" => {
-            let (flags, path) = parse_ls_flags(&command[1..])?;
-            Ok(Command::Ls(flags, path))
-        }
+        "ls" => Ok(Command::Ls(command[1..].to_vec())),
 
         "pwd" => Ok(Command::Pwd),
 
@@ -48,7 +46,10 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "mv: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!("mv: missing destination file operand after '{}'", command[1]);
+                    err = format!(
+                        "mv: missing destination file operand after '{}'",
+                        command[1]
+                    );
                 }
                 Err(err)
             } else {
@@ -67,7 +68,10 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "cp: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!("cp: missing destination file operand after '{}'", command[1]);
+                    err = format!(
+                        "cp: missing destination file operand after '{}'",
+                        command[1]
+                    );
                 }
                 Err(err)
             } else {
@@ -86,33 +90,6 @@ pub fn input_parser(input: String) -> Result<Command, String> {
 
         _ => Err(format!("Command '{}' not found", command[0])),
     }
-}
-
-fn parse_ls_flags(args: &[String]) -> Result<(Vec<char>, Option<String>), String> {
-    let valid_flags = ['l', 'a', 'F'];
-    let mut flags = Vec::new();
-    let mut path = None;
-
-    for arg in args {
-        if arg.starts_with('-') {
-            for ch in arg.chars().skip(1) {
-                if valid_flags.contains(&ch) {
-                    if !flags.contains(&ch) {
-                        flags.push(ch);
-                    }
-                } else {
-                    return Err(format!("ls: invalid option -- '{ch}'"));
-                }
-            }
-        } else {
-            if path.is_some() {
-                return Err("ls: too many arguments".to_string());
-            }
-            path = Some(arg.clone());
-        }
-    }
-
-    Ok((flags, path))
 }
 
 fn parse_rm_flags(args: &[String]) -> Result<(bool, Vec<String>), String> {
@@ -153,80 +130,78 @@ pub fn split(command: &str) -> Vec<String> {
             escape_next = false;
         } else {
             match quote_char {
-                Some(q) =>
-                    match c {
-                        '\\' => {
-                            if q == '"' {
-                                if i + 1 < chars.len() {
-                                    let next = chars[i + 1];
-                                    match next {
-                                        '\\' | '"' | '\n' => {
-                                            i += 1;
-                                            if next != '\n' {
-                                                word.push(next);
-                                            }
+                Some(q) => match c {
+                    '\\' => {
+                        if q == '"' {
+                            if i + 1 < chars.len() {
+                                let next = chars[i + 1];
+                                match next {
+                                    '\\' | '"' | '\n' => {
+                                        i += 1;
+                                        if next != '\n' {
+                                            word.push(next);
                                         }
-                                        _ => word.push('\\'),
                                     }
-                                } else {
-                                    word.push('\\');
+                                    _ => word.push('\\'),
                                 }
                             } else {
                                 word.push('\\');
                             }
+                        } else {
+                            word.push('\\');
                         }
-                        _ if c == q => {
-                            quote_char = None;
+                    }
+                    _ if c == q => {
+                        quote_char = None;
+                        result.push(word.clone());
+                        quoted_words.push(true); // Mark as quoted
+                        word.clear();
+                        word_was_quoted = false;
+                    }
+                    _ => {
+                        word.push(c);
+                        word_was_quoted = true;
+                    }
+                },
+                None => match c {
+                    '\\' => {
+                        if i + 1 == chars.len() {
+                            print!("> ");
+                            if let Err(e) = stdout().flush() {
+                                eprintln!("Failed to flush stdout: {e}");
+                                break;
+                            }
+                            let mut next_line = String::new();
+                            match stdin().read_line(&mut next_line) {
+                                Ok(0) => {
+                                    break;
+                                }
+                                Ok(_) => chars.extend(next_line.chars()),
+                                Err(e) => {
+                                    eprintln!("Failed to read line: {e}");
+                                    break;
+                                }
+                            }
+                        } else {
+                            escape_next = true;
+                        }
+                    }
+                    '\'' | '"' => {
+                        quote_char = Some(c);
+                        word_was_quoted = true;
+                    }
+                    c if c.is_whitespace() => {
+                        if !word.is_empty() {
                             result.push(word.clone());
-                            quoted_words.push(true); // Mark as quoted
+                            quoted_words.push(word_was_quoted);
                             word.clear();
                             word_was_quoted = false;
                         }
-                        _ => {
-                            word.push(c);
-                            word_was_quoted = true;
-                        }
                     }
-                None =>
-                    match c {
-                        '\\' => {
-                            if i + 1 == chars.len() {
-                                print!("> ");
-                                if let Err(e) = stdout().flush() {
-                                    eprintln!("Failed to flush stdout: {e}");
-                                    break;
-                                }
-                                let mut next_line = String::new();
-                                match stdin().read_line(&mut next_line) {
-                                    Ok(0) => {
-                                        break;
-                                    }
-                                    Ok(_) => chars.extend(next_line.chars()),
-                                    Err(e) => {
-                                        eprintln!("Failed to read line: {e}");
-                                        break;
-                                    }
-                                }
-                            } else {
-                                escape_next = true;
-                            }
-                        }
-                        '\'' | '"' => {
-                            quote_char = Some(c);
-                            word_was_quoted = true;
-                        }
-                        c if c.is_whitespace() => {
-                            if !word.is_empty() {
-                                result.push(word.clone());
-                                quoted_words.push(word_was_quoted);
-                                word.clear();
-                                word_was_quoted = false;
-                            }
-                        }
-                        _ => {
-                            word.push(c);
-                        }
+                    _ => {
+                        word.push(c);
                     }
+                },
             }
         }
 
@@ -265,12 +240,15 @@ pub fn split(command: &str) -> Vec<String> {
         .into_iter()
         .zip(quoted_words)
         .map(|(cmd, quoted)| {
-            if
-                !quoted &&
-                cmd.starts_with('~') &&
-                (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
+            if !quoted
+                && cmd.starts_with('~')
+                && (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
             {
-                if let Ok(home) = env::var("HOME") { format!("{}{}", home, &cmd[1..]) } else { cmd }
+                if let Ok(home) = env::var("HOME") {
+                    format!("{}{}", home, &cmd[1..])
+                } else {
+                    cmd
+                }
             } else {
                 cmd
             }
