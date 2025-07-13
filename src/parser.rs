@@ -139,100 +139,94 @@ pub fn split(command: &str) -> Vec<String> {
     let mut chars: Vec<char> = command.chars().collect();
     let mut i = 0;
     let mut escape_next = false;
-    let mut first_line = true;
-    let mut quoted_words = Vec::new(); // Track if each word was quoted
+    let mut quoted_words = Vec::new();
     let mut word_was_quoted = false;
 
-    while i < chars.len() {
-        let c = chars[i];
+    loop {
+        while i < chars.len() {
+            let c = chars[i];
 
-        if escape_next {
-            if c != '\n' {
-                word.push(c);
-            }
-            escape_next = false;
-        } else {
-            match quote_char {
-                Some(q) =>
-                    match c {
-                        '\\' => {
-                            if q == '"' {
-                                if i + 1 < chars.len() {
-                                    let next = chars[i + 1];
-                                    match next {
-                                        '\\' | '"' | '\n' => {
-                                            i += 1;
-                                            if next != '\n' {
-                                                word.push(next);
+            if escape_next {
+                if c != '\n' {
+                    word.push(c);
+                }
+                escape_next = false;
+            } else {
+                match quote_char {
+                    Some(q) =>
+                        match c {
+                            '\\' => {
+                                if q == '"' {
+                                    if i + 1 < chars.len() {
+                                        let next = chars[i + 1];
+                                        match next {
+                                            '\\' | '"' | '\n' => {
+                                                i += 1;
+                                                if next != '\n' {
+                                                    word.push(next);
+                                                }
                                             }
+                                            _ => word.push('\\'),
                                         }
-                                        _ => word.push('\\'),
+                                    } else {
+                                        word.push('\\');
                                     }
                                 } else {
                                     word.push('\\');
                                 }
-                            } else {
-                                word.push('\\');
+                            }
+                            c if c == q => {
+                                quote_char = None;
+                                word_was_quoted = true;
+                            }
+                            _ => {
+                                if c != '\n' {
+                                    word.push(c);
+                                }
+
+                                word_was_quoted = true;
                             }
                         }
-                        _ if c == q => {
-                            quote_char = None;
-                            result.push(word.clone());
-                            quoted_words.push(true); // Mark as quoted
-                            word.clear();
-                            word_was_quoted = false;
-                        }
-                        _ => {
-                            word.push(c);
-                            word_was_quoted = true;
-                        }
-                    }
-                None =>
-                    match c {
-                        '\\' => {
-                            if i + 1 == chars.len() {
-                                print!("> ");
-                                if let Err(e) = stdout().flush() {
-                                    eprintln!("Failed to flush stdout: {e}");
+                    None =>
+                        match c {
+                            '\\' => {
+                                if i + 1 >= chars.len() {
                                     break;
+                                } else if chars[i + 1] == '\n' {
+                                    i += 2;
+                                    continue;
+                                } else {
+                                    escape_next = true;
                                 }
-                                let mut next_line = String::new();
-                                match stdin().read_line(&mut next_line) {
-                                    Ok(0) => {
-                                        break;
-                                    }
-                                    Ok(_) => chars.extend(next_line.chars()),
-                                    Err(e) => {
-                                        eprintln!("Failed to read line: {e}");
-                                        break;
-                                    }
+                            }
+                            '\'' | '"' => {
+                                quote_char = Some(c);
+                            }
+                            c if c.is_whitespace() => {
+                                if !word.is_empty() {
+                                    result.push(word.clone());
+                                    quoted_words.push(word_was_quoted);
+                                    word.clear();
+                                    word_was_quoted = false;
                                 }
-                            } else {
-                                escape_next = true;
+                            }
+                            _ => {
+                                word.push(c);
                             }
                         }
-                        '\'' | '"' => {
-                            quote_char = Some(c);
-                            word_was_quoted = true;
-                        }
-                        c if c.is_whitespace() => {
-                            if !word.is_empty() {
-                                result.push(word.clone());
-                                quoted_words.push(word_was_quoted);
-                                word.clear();
-                                word_was_quoted = false;
-                            }
-                        }
-                        _ => {
-                            word.push(c);
-                        }
-                    }
+                }
             }
+
+            i += 1;
         }
-
-        i += 1;
-
-        if i == chars.len() && quote_char.is_some() {
+        let has_backslash_continuation =
+            chars
+                .iter()
+                .rev()
+                .find(|&&c| c != '\n') == Some(&'\\');
+        let has_unclosed_quote = quote_char.is_some();
+        let needs_continuation = has_backslash_continuation || has_unclosed_quote;
+        if needs_continuation {
             print!("> ");
             if let Err(e) = stdout().flush() {
                 eprintln!("Failed to flush stdout: {e}");
@@ -243,16 +237,31 @@ pub fn split(command: &str) -> Vec<String> {
                 Ok(0) => {
                     break;
                 }
-                Ok(_) => chars.extend(next_line.chars()),
+                Ok(_) => {
+                    if has_backslash_continuation {
+                        if next_line == "\n" {
+                            chars.pop();
+                        }
+                        if next_line.trim_end() == "\\" {
+                            continue;
+                        }
+
+                        let trimmed = next_line.trim_end_matches('\n');
+                        chars.extend(trimmed.chars());
+                    } else {
+                        word.push('\n');
+
+                        chars.extend(next_line.chars());
+                    }
+                    continue;
+                }
                 Err(e) => {
                     eprintln!("Failed to read line: {e}");
                     break;
                 }
             }
-            if first_line {
-                word.push('\n');
-                first_line = false;
-            }
+        } else {
+            break;
         }
     }
 
@@ -260,7 +269,6 @@ pub fn split(command: &str) -> Vec<String> {
         result.push(word);
         quoted_words.push(word_was_quoted);
     }
-
     result
         .into_iter()
         .zip(quoted_words)

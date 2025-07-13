@@ -3,14 +3,15 @@ pub fn echo(args: Vec<String>) {
         println!();
         return;
     }
-
-    let parsed_args = args
+    let mut parsed_args = args
         .iter()
         .map(|arg| process_escape(arg))
         .collect::<Vec<String>>()
         .join(" ");
-
-    println!("{parsed_args}" );
+    if parsed_args.chars().nth(parsed_args.len()-1).unwrap() != '\n'{
+        parsed_args.push('\n');
+    }
+    print!("{parsed_args}" );
 }
 
 fn process_escape(arg: &str) -> String {
@@ -22,7 +23,7 @@ fn process_escape(arg: &str) -> String {
             '\\' => {
                 if let Some(next_char) = chars.next() {
                     match next_char {
-                        'n' => result.push('\n'),
+                        'n' => result.push_str("\n\n"),
                         'r' => result.push('\r'),
                         't' => result.push('\t'),
                         '\\' => result.push('\\'),
