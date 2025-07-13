@@ -10,7 +10,7 @@ pub fn echo(args: Vec<String>) {
         .collect::<Vec<String>>()
         .join(" ");
 
-    println!("{}", parsed_args);
+    println!("{parsed_args}" );
 }
 
 fn process_escape(arg: &str) -> String {

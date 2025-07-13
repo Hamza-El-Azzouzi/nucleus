@@ -33,12 +33,12 @@ fn move_single_source(source: &Path, dest: &Path) {
                 Some(file_name) => {
                     let dest = dest.join(file_name);
                     if let Err(e) = fs::rename(source, dest) {
-                        println!("{}", e)
+                        println!("{e}")
                     }
                 }
                 _ => {
                     if let Err(e) = fs::rename(source, dest) {
-                        println!("{}", e)
+                        println!("{e}")
                     }
                 }
             }
@@ -54,7 +54,7 @@ fn move_single_source(source: &Path, dest: &Path) {
         }
 
         if let Err(e) = fs::rename(source, dest) {
-            println!("{}", e)
+            println!("{e}")
         }
     }
 }
@@ -81,12 +81,12 @@ fn move_multiple_sources(sources: &[String], dest: &Path) {
             Some(file_name) => {
                 let dest_path = dest.join(file_name);
                 if let Err(e) = fs::rename(source_path, dest_path) {
-                    println!("{}", e)
+                    println!("{e}")
                 }
             }
             _ => {
                 if let Err(e) = fs::rename(source_path, dest) {
-                    println!("{}", e)
+                    println!("{e}")
                 }
             }
         }
