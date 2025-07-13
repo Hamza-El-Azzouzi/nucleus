@@ -50,6 +50,7 @@ pub fn format_detailed_file_info(
     max_lens: &HashMap<usize, usize>,
     path: &Vec<String>,
     max_size_len: &usize,
+    quote_exist: &bool,
 ) -> String {
     let mut result = String::new();
 
@@ -57,6 +58,14 @@ pub fn format_detailed_file_info(
         let max_width = max_lens.get(&i).copied().unwrap_or(0);
 
         if i == path.len() - 1 {
+            if *quote_exist {
+                if !(info.starts_with("'") && info.ends_with("'"))
+                    && !(info.starts_with("\'") && info.ends_with("\'"))
+                {
+                    result.push_str(" ");
+                }
+            }
+
             result.push_str(info);
         } else if i == 1 {
             result.push_str(&format!("{:>width$} ", info, width = max_width));

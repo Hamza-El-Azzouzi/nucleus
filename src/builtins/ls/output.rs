@@ -130,8 +130,16 @@ impl LsOutput {
     fn print(result: &mut Vec<Vec<String>>, max_size_len: &usize, flags: &Flag) {
         let mut max_lens: HashMap<usize, usize> = HashMap::new();
 
+        let mut quote_exist: bool = false;
+
         if flags.l {
             for path in result.iter() {
+                let name = &path[path.len() - 1];
+                if (name.starts_with("'") && name.ends_with("'"))
+                    || (name.starts_with("\"") && name.ends_with("\""))
+                {
+                    quote_exist = true;
+                }
                 for (i, field) in path.iter().enumerate() {
                     let len = field.len();
                     let entry = max_lens.entry(i).or_insert(0);
@@ -143,7 +151,7 @@ impl LsOutput {
             for path in result.iter() {
                 println!(
                     "{}",
-                    format_detailed_file_info(&max_lens, path, max_size_len)
+                    format_detailed_file_info(&max_lens, path, max_size_len, &quote_exist)
                 );
             }
         } else {
