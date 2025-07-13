@@ -173,7 +173,6 @@ pub fn split(command: &str) -> Vec<String> {
                                     i += 2;
                                     continue;
                                 } else {
-                                    println!("{c}");
                                     escape_next = true;
                                 }
                             }
