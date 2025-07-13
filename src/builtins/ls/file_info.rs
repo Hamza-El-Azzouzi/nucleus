@@ -77,7 +77,7 @@ fn get_modified_at(metadata: &Metadata) -> String {
             let now = Casablanca.from_utc_datetime(&Utc::now().naive_utc());
             let six_months_ago = now - Duration::days(30 * 6);
 
-            if datetime > six_months_ago {
+            if datetime > six_months_ago && datetime <= now {
                 datetime.format("%b %e %H:%M").to_string()
             } else {
                 datetime.format("%b %e  %Y").to_string()
