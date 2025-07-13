@@ -28,6 +28,7 @@ impl LsProcessor {
         for file in files {
             if flags.l {
                 let mut file_name = file.to_string_lossy().to_string();
+                quote_if_needed(&mut file_name);
                 let info = get_detailed_file_info(&file, &mut file_name, None, max_len, flags)?;
                 file_result.push(info);
             } else {
@@ -127,6 +128,8 @@ impl LsProcessor {
                     .map(|s| s.to_string())
                     .or_else(|| Some(path.to_string_lossy().to_string()))
                     .ok_or_else(|| format!("Unable to get file name for path: {:?}", path))?;
+                quote_if_needed(&mut file_name);
+
                 match get_detailed_file_info(
                     &path,
                     &mut file_name,

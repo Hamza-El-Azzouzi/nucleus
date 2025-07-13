@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::builtins::ls::{file_permissions::get_major_minor, formatter::quote_if_needed};
+use crate::builtins::ls::file_permissions::get_major_minor;
 
 use super::{file_permissions::get_permissions, formatter::format_path, parser::Flag};
 
@@ -41,7 +41,6 @@ pub fn get_detailed_file_info(
         *max_len = size.len();
     }
 
-    quote_if_needed(file_name);
     format_path(path, file_name, flags)?;
 
     let (user_owner, group_owner) = get_owners_info(&metadata)

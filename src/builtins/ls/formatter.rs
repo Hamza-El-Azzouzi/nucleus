@@ -22,17 +22,19 @@ pub fn add_dot_entries(
     let mut dot: String = ".".to_owned();
     let mut dotdot = "..".to_owned();
 
-    colorize_dir(&mut dot, flags);
-    colorize_dir(&mut dotdot, flags);
-
     if flags.l {
         let dot_path = dir.join(PathBuf::from("."));
         let dotdot_path = dir.join(PathBuf::from(".."));
 
         let mut dot_info =
             get_detailed_file_info(&dot_path, &mut dot, Some(total_blocks), max_len, flags)?;
-        let mut dotdot_info =
-            get_detailed_file_info(&dotdot_path, &mut dot, Some(total_blocks), max_len, flags)?;
+        let mut dotdot_info = get_detailed_file_info(
+            &dotdot_path,
+            &mut dotdot,
+            Some(total_blocks),
+            max_len,
+            flags,
+        )?;
 
         dot_info[6] = dot;
         dotdot_info[6] = dotdot;
