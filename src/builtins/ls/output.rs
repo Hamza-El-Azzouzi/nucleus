@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use regex::Regex;
-use term_grid::{Cell, Direction, Filling, Grid, GridOptions, Alignment};
 use terminal_size::{Width, terminal_size};
 
 use super::{Directory, formatter::format_detailed_file_info, parser::Flag};
@@ -50,91 +49,86 @@ impl LsOutput {
     }
 
     fn format_result(result: &Vec<Vec<String>>, term_width: usize) -> String {
-        let mut grid = Grid::new(GridOptions {
-            filling: Filling::Spaces(2),
-            direction: Direction::TopToBottom,
-        });
-
-        for s in result.iter() {
-            let clean_name = Self::strip_ansi_codes(&s[0]);
-            let cell = Cell {
-                contents: s[0].clone(), 
-                width: clean_name.len(),
-                alignment: Alignment::Left,
-            };
-            grid.add(cell);
-        }
-        let mut res = String::new();
-        if let Some(display) = grid.fit_into_width(term_width) {
-            res.push_str(&display.to_string());
-        } else {
-            res.push_str(&Self::format_result_manual(result, term_width));
-        }
-        res
-    }
-
-    fn format_result_manual(result: &Vec<Vec<String>>, term_width: usize) -> String {
         if result.is_empty() {
             return String::new();
         }
-    
-        let names: Vec<String> = result
+
+        let items: Vec<(String, usize)> = result
             .iter()
-            .map(|s| s.first().cloned().unwrap_or_default())
+            .map(|s| {
+                let name = s.first().cloned().unwrap_or_default();
+                let clean_len = Self::strip_ansi_codes(&name).len();
+                (name, clean_len)
+            })
             .collect();
-    
+
+        let item_count = items.len();
         let mut best_cols = 1;
-        let mut best_rows = names.len();
-        
-        for cols in 1..=names.len() {
-            let rows: usize = names.len().div_ceil(cols);
+        let mut best_rows = item_count;
+
+        if item_count == 1 {
+            return format!("{}\n", items[0].0);
+        }
+
+        for cols in 1..=item_count.min(term_width / 3) {
+            let rows = item_count.div_ceil(cols);
+
+            if rows > best_rows {
+                continue;
+            }
+
             let mut col_widths = vec![0; cols];
-            for (idx, name) in names.iter().enumerate() {
+
+            for (idx, (_, clean_len)) in items.iter().enumerate() {
                 let col = idx / rows;
                 if col < cols {
-                    let clean_len = Self::strip_ansi_codes(name).len();
-                    col_widths[col] = col_widths[col].max(clean_len);
+                    col_widths[col] = col_widths[col].max(*clean_len);
                 }
             }
+
             let total_width: usize = col_widths.iter().sum::<usize>() + (cols - 1) * 2;
-            
-            if total_width <= term_width && rows <= best_rows {
+
+            if total_width <= term_width {
                 best_cols = cols;
                 best_rows = rows;
+
+                if rows == 1 {
+                    break;
+                }
             }
         }
-        
+
         let cols = best_cols;
         let rows = best_rows;
+
         let mut col_widths = vec![0; cols];
-        for (idx, name) in names.iter().enumerate() {
+        for (idx, (_, clean_len)) in items.iter().enumerate() {
             let col = idx / rows;
             if col < cols {
-                let clean_len = Self::strip_ansi_codes(name).len();
-                col_widths[col] = col_widths[col].max(clean_len);
+                col_widths[col] = col_widths[col].max(*clean_len);
             }
         }
-        let mut lines = Vec::new();
+
+        let estimated_capacity = (term_width + 1) * rows;
+        let mut result = String::with_capacity(estimated_capacity);
+
         for row in 0..rows {
-            let mut line = String::new();
-            for col in 0..cols {
+            for (col, col_width) in col_widths.iter().enumerate() {
                 let idx = col * rows + row;
-                if idx < names.len() {
-                    let name = &names[idx];
-                    let clean = Self::strip_ansi_codes(name);
-                    let pad = col_widths[col] - clean.len();
-                    line.push_str(name);
-                    if col < cols - 1 && idx < names.len() - 1 {
-                        for _ in 0..(pad + 2) {
-                            line.push(' ');
-                        }
+                if idx < item_count {
+                    let (name, clean_len) = &items[idx];
+                    result.push_str(name);
+
+                    if col < cols - 1 && idx < item_count - 1 {
+                        let pad = col_width - clean_len + 2;
+                        result.extend(std::iter::repeat_n(' ', pad));
                     }
                 }
             }
-            lines.push(line);
+            result.push('\n');
         }
-    
-        lines.join("\n") + "\n"
+
+        result
     }
 
     fn print(result: &mut Vec<Vec<String>>, max_size_len: &usize, flags: &Flag) {
