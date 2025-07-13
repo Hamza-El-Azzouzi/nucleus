@@ -3,12 +3,14 @@ pub fn echo(args: Vec<String>) {
         println!();
         return;
     }
+    // println!("{args:?}");
     let mut parsed_args = args
         .iter()
         .map(|arg| process_escape(arg))
         .collect::<Vec<String>>()
         .join(" ");
-    if parsed_args.len() < 2 || !parsed_args.ends_with("\n\n") {
+
+    if (parsed_args.len() < 2 || !parsed_args.ends_with("\n\n")) && !parsed_args.is_empty() {
         parsed_args.push('\n');
         print!("{parsed_args}");
         return;
