@@ -18,9 +18,16 @@ impl LsProcessor {
         max_len: &mut usize,
         file_result: &mut Vec<Vec<String>>,
     ) -> Result<(), String> {
+        let mut files = files.to_vec();
+        files.sort_by(|a, b| {
+            let a_name = clean_string(a.to_string_lossy().to_uppercase());
+            let b_name = clean_string(b.to_string_lossy().to_uppercase());
+            a_name.cmp(&b_name)
+        });
+
         for file in files {
             if flags.l {
-                let info = get_detailed_file_info(file, None, max_len, flags)?;
+                let info = get_detailed_file_info(&file, None, max_len, flags)?;
                 file_result.push(info);
             } else {
                 let mut name = file

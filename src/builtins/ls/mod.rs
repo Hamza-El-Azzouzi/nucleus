@@ -18,18 +18,18 @@ pub struct Directory {
     pub total_blocks: u64,
 }
 
-pub fn ls(flags: Vec<char>, directories: Vec<PathBuf>, files: Vec<PathBuf>) {
-    let mut directories: Vec<PathBuf> = directories.clone();
-    let files: Vec<PathBuf> = files.clone();
+pub fn ls(args: Vec<String>) {
+    let mut directories: Vec<PathBuf> = Vec::new();
+    let mut files: Vec<PathBuf> = Vec::new();
     let mut file_result: Vec<Vec<String>> = Vec::new();
     let mut dir_results: Vec<Directory> = Vec::new();
 
-    // let flags = Flag::parse(&args, &mut directories, &mut files)?;
-
-    let flags = Flag {
-        l: flags.contains(&'l'),
-        a: flags.contains(&'a'),
-        f: flags.contains(&'F'),
+    let flags = match Flag::parse(&args, &mut directories, &mut files) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("ls: {e}");
+            return;
+        }
     };
 
     if directories.is_empty() && files.is_empty() {
@@ -38,11 +38,11 @@ pub fn ls(flags: Vec<char>, directories: Vec<PathBuf>, files: Vec<PathBuf>) {
     let mut max_files_len = 0;
     match LsProcessor::process_files(&files, &flags, &mut max_files_len, &mut file_result) {
         Ok(_) => (),
-        Err(e) => eprintln!("{e}"),
+        Err(e) => eprintln!("ls: {e}"),
     };
     match LsProcessor::process_directories(&directories, &flags, &mut dir_results) {
         Ok(_) => (),
-        Err(e) => eprintln!("{e}"),
+        Err(e) => eprintln!("ls: {e}"),
     };
 
     LsOutput::print_results(

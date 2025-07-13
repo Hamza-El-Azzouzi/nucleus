@@ -40,12 +40,7 @@ pub fn get_detailed_file_info(
         *max_len = size.len();
     }
 
-    let mut file_name = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .map(|s| s.to_string())
-        .or_else(|| Some(path.to_string_lossy().to_string()))
-        .ok_or_else(|| format!("Unable to get file name for path: {:?}", path))?;
+    let mut file_name = path.to_string_lossy().to_string();
 
     quote_if_needed(&mut file_name);
     format_path(path, &mut file_name, flags)?;

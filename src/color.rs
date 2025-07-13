@@ -9,6 +9,7 @@ pub enum Color {
     Blue,
     SkyBlue,
     Brown,
+    Pink,
 }
 
 pub fn colorize(text: &str, color: Color, bold: bool) -> String {
@@ -17,8 +18,9 @@ pub fn colorize(text: &str, color: Color, bold: bool) -> String {
         Color::Green => text.green(),
         Color::Blue => text.blue(),
         Color::Orange => text.truecolor(255, 165, 0),
-        Color::SkyBlue => text.truecolor(135, 206, 235),
+        Color::SkyBlue => text.truecolor(45, 158, 179),
         Color::Brown => text.truecolor(156, 109, 71),
+        Color::Pink => text.truecolor(162, 71, 185),
     };
 
     if bold {
@@ -44,6 +46,22 @@ pub fn colorize_executable(file_name: &mut String, flags: &Flag) {
     *file_name = colorize(file_name, Color::Green, true);
     if flags.f {
         file_name.push('*');
+    }
+}
+
+pub fn colorize_pipe(file_name: &mut String, flags: &Flag) {
+    *file_name = colorize(file_name, Color::Brown, false)
+        .on_black()
+        .to_string();
+    if flags.f {
+        file_name.push('|');
+    }
+}
+
+pub fn colorize_socket(file_name: &mut String, flags: &Flag) {
+    *file_name = colorize(file_name, Color::Pink, false);
+    if flags.f {
+        file_name.push('|');
     }
 }
 

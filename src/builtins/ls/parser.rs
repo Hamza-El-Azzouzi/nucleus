@@ -17,7 +17,6 @@ impl Flag {
             f: false,
             l: false,
         };
-
         for arg in args {
             if arg.starts_with('-') {
                 for ch in arg.chars().skip(1) {
@@ -37,7 +36,7 @@ impl Flag {
                 let path = PathBuf::from(arg);
                 if path.is_dir() {
                     directories.push(path);
-                } else if path.is_file() {
+                } else if path.symlink_metadata().is_ok() {
                     files.push(path);
                 } else {
                     return Err(format!(

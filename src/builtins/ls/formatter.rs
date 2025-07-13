@@ -6,7 +6,8 @@ use std::{
 };
 
 use crate::color::{
-    Color, colorize, colorize_device, colorize_dir, colorize_executable, colorize_symlink,
+    Color, colorize, colorize_device, colorize_dir, colorize_executable, colorize_pipe,
+    colorize_socket, colorize_symlink,
 };
 
 use super::{file_info::get_detailed_file_info, parser::Flag};
@@ -82,16 +83,12 @@ pub fn format_path(path: &PathBuf, file_name: &mut String, flags: &Flag) -> Resu
         .map_err(|e| format!("cannot access '{}': {}", path.display(), e))?;
     let mode = metadata.permissions().mode();
 
-    if flags.f {
-        let file_type = metadata.file_type();
-        if file_type.is_fifo() {
-            file_name.push('|');
-        } else if file_type.is_socket() {
-            file_name.push('=');
-        }
+    let file_type = metadata.file_type();
+    if file_type.is_fifo() {
+        colorize_pipe(file_name, flags);
+    } else if file_type.is_socket() {
+        colorize_socket(file_name, flags);
     }
-
-
     if path.is_symlink() {
         return format_symlink(path, file_name, flags);
     } else if path.is_dir() {
@@ -130,11 +127,15 @@ fn format_symlink(path: &Path, file_name: &mut String, flags: &Flag) -> Result<(
                 colorize_symlink(&mut target_str, true, flags);
             } else if target.is_symlink() {
                 let metadata = target
-                    .symlink_metadata()
+                    .metadata()
                     .map_err(|e| format!("cannot access '{}': {}", path.display(), e))?;
                 let mode = metadata.permissions().mode();
                 if metadata.is_dir() {
                     colorize_dir(file_name, flags);
+                } else if metadata.file_type().is_char_device()
+                    || metadata.file_type().is_block_device()
+                {
+                    colorize_device(&mut target_str, flags);
                 } else if is_executable(&mode) {
                     colorize_executable(&mut target_str, flags);
                 }
