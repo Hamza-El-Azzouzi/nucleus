@@ -16,7 +16,21 @@ pub fn cat(files: Vec<String>) {
         }
         return;
     }
-    for file in files {
+
+    'files_loop:for file in files {
+        if file == "-" {
+            let stdin = io::stdin();
+            for line in stdin.lock().lines() {
+                match line {
+                    Ok(content) => println!("{content}"),
+                    Err(err) => {
+                        println!("cat: failed to read from stdin: {err}");
+                        
+                    }
+                }
+            }
+            continue 'files_loop;
+        }
         let is_dir = Path::new::<String>(&file).is_dir();
         if is_dir {
             println!("cat: {file}: Is a directory");
@@ -31,7 +45,10 @@ pub fn cat(files: Vec<String>) {
         let file_result = fs::read_to_string(file_path);
         match file_result {
             Ok(file_content) => print!("{file_content}"),
-            Err(_) => println!("cat: {file}: No such file or directory"),
+            Err(e) => match e.kind() {
+                std::io::ErrorKind::NotFound => println!("cat: {file}: No such file or directory"),
+                _ => println!("cat: {file}: {}",e.kind()),
+            },
         }
     }
 }
