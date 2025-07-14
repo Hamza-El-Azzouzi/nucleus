@@ -124,10 +124,11 @@ pub fn split(command: &str) -> Vec<String> {
                 escape_next = false;
             } else {
                 match quote_char {
-                    Some(q) =>
+                    Some(q) => {
                         match c {
                             '\\' => {
                                 if q == '"' {
+                                    // In double quotes, handle escape sequences
                                     if i + 1 < chars.len() {
                                         let next = chars[i + 1];
                                         match next {
@@ -143,6 +144,7 @@ pub fn split(command: &str) -> Vec<String> {
                                         word.push('\\');
                                     }
                                 } else {
+                                    // In single quotes, backslash is literal
                                     word.push('\\');
                                 }
                             }
@@ -150,15 +152,18 @@ pub fn split(command: &str) -> Vec<String> {
                                 quote_char = None;
                                 word_was_quoted = true;
                             }
+                            '\n' => {
+                                // Newlines are preserved in quoted strings
+                                word.push('\n');
+                                word_was_quoted = true;
+                            }
                             _ => {
-                                if c != '\n' {
-                                    word.push(c);
-                                }
-
+                                word.push(c);
                                 word_was_quoted = true;
                             }
                         }
-                    None =>
+                    }
+                    None => {
                         match c {
                             '\\' => {
                                 if i + 1 >= chars.len() {
@@ -185,49 +190,45 @@ pub fn split(command: &str) -> Vec<String> {
                                 word.push(c);
                             }
                         }
+                    }
                 }
             }
 
             i += 1;
         }
-        let mut rev_chars = chars
-            .iter()
-            .rev()
-            .filter(|&&c| c != '\n');
-        let last = rev_chars.next();
-        let second_last = rev_chars.next();
 
-        let has_backslash_continuation = last == Some(&'\\') && second_last != Some(&'\\');
+        // Check if we need continuation
         let has_unclosed_quote = quote_char.is_some();
+        let has_backslash_continuation = !chars.is_empty() && 
+            chars.last() == Some(&'\\') && 
+            (chars.len() < 2 || chars[chars.len() - 2] != '\\');
+        
         let needs_continuation = has_backslash_continuation || has_unclosed_quote;
+        
         if needs_continuation {
             print!("> ");
             if let Err(e) = stdout().flush() {
                 eprintln!("Failed to flush stdout: {e}");
                 break;
             }
+            
+            let stdin = stdin();
             let mut next_line = String::new();
-            match stdin().read_line(&mut next_line) {
+            match stdin.read_line(&mut next_line) {
                 Ok(0) => {
+                    // EOF reached
                     break;
                 }
                 Ok(_) => {
-                    //  println!("nee : {next_line}");
-                    if has_backslash_continuation {
-                        if next_line == "\n" {
-                            chars.pop();
-                            // println!("{chars:?}");
-                            break;
+                    if has_backslash_continuation && quote_char.is_none() {
+                        // Remove the trailing backslash for line continuation outside quotes
+                        chars.pop();
+                        // Don't add the newline for backslash continuation
+                        if !next_line.is_empty() {
+                            chars.extend(next_line.chars());
                         }
-                        if next_line.trim_end() == "\\" {
-                            continue;
-                        }
-                  
-                        let trimmed = next_line.trim_end_matches('\n');
-                        chars.extend(trimmed.chars());
                     } else {
-                        word.push('\n');
-
+                        // For quoted strings, keep the newline behavior
                         chars.extend(next_line.chars());
                     }
                     continue;
@@ -246,16 +247,20 @@ pub fn split(command: &str) -> Vec<String> {
         result.push(word);
         quoted_words.push(word_was_quoted);
     }
+    
     result
         .into_iter()
         .zip(quoted_words)
         .map(|(cmd, quoted)| {
-            if
-                !quoted &&
+            if !quoted &&
                 cmd.starts_with('~') &&
                 (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
             {
-                if let Ok(home) = env::var("HOME") { format!("{}{}", home, &cmd[1..]) } else { cmd }
+                if let Ok(home) = env::var("HOME") { 
+                    format!("{}{}", home, &cmd[1..]) 
+                } else { 
+                    cmd 
+                }
             } else {
                 cmd
             }
