@@ -9,15 +9,12 @@ pub fn echo(args: Vec<String>) {
         .map(|arg| process_escape(arg))
         .collect::<Vec<String>>()
         .join(" ");
-    
-    // Only check for non-printable characters if no escape sequences were processed
     let has_escape_sequences = args.iter().any(|arg| arg.contains('\\'));
     
     if !has_escape_sequences && parsed_args.chars().any(|c| !c.is_ascii_graphic() && !c.is_ascii_whitespace()) {
         println!();
         return;
     }
-    
     if (parsed_args.len() < 2 || !parsed_args.ends_with("\n\n")) && !parsed_args.is_empty() {
         parsed_args.push('\n');
         print!("{parsed_args}");

@@ -1,5 +1,5 @@
 use std::env;
-use std::io::{Write, stdin, stdout};
+use std::io::{ Write, stdin, stdout };
 
 use std::string::String;
 #[derive(Debug, PartialEq)]
@@ -46,10 +46,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "mv: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!(
-                        "mv: missing destination file operand after '{}'",
-                        command[1]
-                    );
+                    err = format!("mv: missing destination file operand after '{}'", command[1]);
                 }
                 Err(err)
             } else {
@@ -68,10 +65,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "cp: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!(
-                        "cp: missing destination file operand after '{}'",
-                        command[1]
-                    );
+                    err = format!("cp: missing destination file operand after '{}'", command[1]);
                 }
                 Err(err)
             } else {
@@ -218,16 +212,19 @@ pub fn split(command: &str) -> Vec<String> {
                     break;
                 }
                 Ok(_) => {
+                    //  println!("nee : {next_line}");
                     if has_backslash_continuation {
                         if next_line == "\n" {
                             chars.pop();
+                            // println!("{chars:?}");
+                            break;
                         }
                         if next_line.trim_end() == "\\" {
                             continue;
                         }
-
-                        // let trimmed = next_line.trim_end_matches('\n');
-                        chars.extend(next_line.chars());
+                  
+                        let trimmed = next_line.trim_end_matches('\n');
+                        chars.extend(trimmed.chars());
                     } else {
                         word.push('\n');
 
@@ -253,15 +250,12 @@ pub fn split(command: &str) -> Vec<String> {
         .into_iter()
         .zip(quoted_words)
         .map(|(cmd, quoted)| {
-            if !quoted
-                && cmd.starts_with('~')
-                && (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
+            if
+                !quoted &&
+                cmd.starts_with('~') &&
+                (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
             {
-                if let Ok(home) = env::var("HOME") {
-                    format!("{}{}", home, &cmd[1..])
-                } else {
-                    cmd
-                }
+                if let Ok(home) = env::var("HOME") { format!("{}{}", home, &cmd[1..]) } else { cmd }
             } else {
                 cmd
             }
