@@ -166,12 +166,15 @@ pub fn split(command: &str) -> Vec<String> {
                     None => {
                         match c {
                             '\\' => {
-                                if i + 1 >= chars.len() {
-                                    break;
-                                } else if chars[i + 1] == '\n' {
+                                if i + 1 < chars.len() && chars[i + 1] == '\n' {
+                                    // Line continuation - skip both \ and \n
                                     i += 2;
                                     continue;
+                                } else if i + 1 >= chars.len() {
+                                    // Backslash at end of input - line continuation needed
+                                    break;
                                 } else {
+                                    // Regular escape
                                     escape_next = true;
                                 }
                             }
@@ -197,38 +200,46 @@ pub fn split(command: &str) -> Vec<String> {
             i += 1;
         }
 
-        // Check if we need continuation
+        // Check if we need continuation using your original logic
+        let mut rev_chars = chars
+            .iter()
+            .rev()
+            .filter(|&&c| c != '\n');
+        let last = rev_chars.next();
+        let second_last = rev_chars.next();
+
+        let has_backslash_continuation = last == Some(&'\\') && second_last != Some(&'\\');
         let has_unclosed_quote = quote_char.is_some();
-        let has_backslash_continuation = !chars.is_empty() && 
-            chars.last() == Some(&'\\') && 
-            (chars.len() < 2 || chars[chars.len() - 2] != '\\');
-        
         let needs_continuation = has_backslash_continuation || has_unclosed_quote;
         
         if needs_continuation {
             print!("> ");
-            if let Err(e) = stdout().flush() {
+            if let Err(e) =stdout().flush() {
                 eprintln!("Failed to flush stdout: {e}");
                 break;
             }
-            
-            let stdin = stdin();
             let mut next_line = String::new();
-            match stdin.read_line(&mut next_line) {
+            match stdin().read_line(&mut next_line) {
                 Ok(0) => {
-                    // EOF reached
                     break;
                 }
                 Ok(_) => {
-                    if has_backslash_continuation && quote_char.is_none() {
-                        // Remove the trailing backslash for line continuation outside quotes
-                        chars.pop();
-                        // Don't add the newline for backslash continuation
-                        if !next_line.is_empty() {
-                            chars.extend(next_line.chars());
+                    if has_backslash_continuation {
+                        if next_line == "\n" {
+                            chars.pop();
+                            break;
                         }
+                        if next_line.trim_end() == "\\" {
+                            continue;
+                        }
+                        
+                        chars.pop(); // Remove the trailing backslash
+                        let start_pos = chars.len();
+                        chars.extend(next_line.chars());
+                        // Continue from where we added the new content
+                        i = start_pos;
                     } else {
-                        // For quoted strings, keep the newline behavior
+                        word.push('\n');
                         chars.extend(next_line.chars());
                     }
                     continue;
