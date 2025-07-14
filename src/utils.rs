@@ -1,4 +1,3 @@
-use crate::color::*;
 use regex::Regex;
 use std::{env, path::PathBuf};
 
