@@ -1,5 +1,5 @@
 use std::env;
-use std::io::{Write, stdin, stdout};
+use std::io::{ Write, stdin, stdout };
 
 use std::string::String;
 #[derive(Debug, PartialEq)]
@@ -17,7 +17,7 @@ pub enum Command {
 }
 
 pub fn input_parser(input: String) -> Result<Command, String> {
-    let command: Vec<String> = split(input.trim_end());
+    let command: Vec<String> = split(&input);
     if command.is_empty() {
         return Err("No command entered".to_string());
     }
@@ -46,10 +46,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "mv: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!(
-                        "mv: missing destination file operand after '{}'",
-                        command[1]
-                    );
+                    err = format!("mv: missing destination file operand after '{}'", command[1]);
                 }
                 Err(err)
             } else {
@@ -68,10 +65,7 @@ pub fn input_parser(input: String) -> Result<Command, String> {
             if command.len() < 3 {
                 let mut err = "cp: missing file operand".to_string();
                 if command.len() == 2 {
-                    err = format!(
-                        "cp: missing destination file operand after '{}'",
-                        command[1]
-                    );
+                    err = format!("cp: missing destination file operand after '{}'", command[1]);
                 }
                 Err(err)
             } else {
@@ -116,100 +110,111 @@ pub fn split(command: &str) -> Vec<String> {
     let mut chars: Vec<char> = command.chars().collect();
     let mut i = 0;
     let mut escape_next = false;
-    let mut first_line = true;
-    let mut quoted_words = Vec::new(); // Track if each word was quoted
+    let mut quoted_words = Vec::new();
     let mut word_was_quoted = false;
 
-    while i < chars.len() {
-        let c = chars[i];
+    loop {
+        while i < chars.len() {
+            let c = chars[i];
 
-        if escape_next {
-            if c != '\n' {
-                word.push(c);
-            }
-            escape_next = false;
-        } else {
-            match quote_char {
-                Some(q) => match c {
-                    '\\' => {
-                        if q == '"' {
-                            if i + 1 < chars.len() {
-                                let next = chars[i + 1];
-                                match next {
-                                    '\\' | '"' | '\n' => {
-                                        i += 1;
-                                        if next != '\n' {
-                                            word.push(next);
+            if escape_next {
+                if c != '\n' {
+                    word.push(c);
+                }
+                escape_next = false;
+            } else {
+                match quote_char {
+                    Some(q) => {
+                        match c {
+                            '\\' => {
+                                if q == '"' {
+                                    // In double quotes, handle escape sequences
+                                    if i + 1 < chars.len() {
+                                        let next = chars[i + 1];
+                                        match next {
+                                            '\\' | '"' | '\n' => {
+                                                i += 1;
+                                                if next != '\n' {
+                                                    word.push(next);
+                                                }
+                                            }
+                                            _ => word.push('\\'),
                                         }
+                                    } else {
+                                        word.push('\\');
                                     }
-                                    _ => word.push('\\'),
+                                } else {
+                                    // In single quotes, backslash is literal
+                                    word.push('\\');
                                 }
-                            } else {
-                                word.push('\\');
                             }
-                        } else {
-                            word.push('\\');
+                            c if c == q => {
+                                quote_char = None;
+                                word_was_quoted = true;
+                            }
+                            '\n' => {
+                                // Newlines are preserved in quoted strings
+                                word.push('\n');
+                                word_was_quoted = true;
+                            }
+                            _ => {
+                                word.push(c);
+                                word_was_quoted = true;
+                            }
                         }
                     }
-                    _ if c == q => {
-                        quote_char = None;
-                        result.push(word.clone());
-                        quoted_words.push(true); // Mark as quoted
-                        word.clear();
-                        word_was_quoted = false;
-                    }
-                    _ => {
-                        word.push(c);
-                        word_was_quoted = true;
-                    }
-                },
-                None => match c {
-                    '\\' => {
-                        if i + 1 == chars.len() {
-                            print!("> ");
-                            if let Err(e) = stdout().flush() {
-                                eprintln!("Failed to flush stdout: {e}");
-                                break;
-                            }
-                            let mut next_line = String::new();
-                            match stdin().read_line(&mut next_line) {
-                                Ok(0) => {
+                    None => {
+                        match c {
+                            '\\' => {
+                                if i + 1 < chars.len() && chars[i + 1] == '\n' {
+                                    // Line continuation - skip both \ and \n
+                                    i += 2;
+                                    continue;
+                                } else if i + 1 >= chars.len() {
+                                    // Backslash at end of input - line continuation needed
                                     break;
-                                }
-                                Ok(_) => chars.extend(next_line.chars()),
-                                Err(e) => {
-                                    eprintln!("Failed to read line: {e}");
-                                    break;
+                                } else {
+                                    // Regular escape
+                                    escape_next = true;
                                 }
                             }
-                        } else {
-                            escape_next = true;
+                            '\'' | '"' => {
+                                quote_char = Some(c);
+                            }
+                            c if c.is_whitespace() => {
+                                if !word.is_empty() {
+                                    result.push(word.clone());
+                                    quoted_words.push(word_was_quoted);
+                                    word.clear();
+                                    word_was_quoted = false;
+                                }
+                            }
+                            _ => {
+                                word.push(c);
+                            }
                         }
                     }
-                    '\'' | '"' => {
-                        quote_char = Some(c);
-                        word_was_quoted = true;
-                    }
-                    c if c.is_whitespace() => {
-                        if !word.is_empty() {
-                            result.push(word.clone());
-                            quoted_words.push(word_was_quoted);
-                            word.clear();
-                            word_was_quoted = false;
-                        }
-                    }
-                    _ => {
-                        word.push(c);
-                    }
-                },
+                }
             }
+
+            i += 1;
         }
 
-        i += 1;
+        // Check if we need continuation using your original logic
+        let mut rev_chars = chars
+            .iter()
+            .rev()
+            .filter(|&&c| c != '\n');
+        let last = rev_chars.next();
+        let second_last = rev_chars.next();
 
-        if i == chars.len() && quote_char.is_some() {
+        let has_backslash_continuation = last == Some(&'\\') && second_last != Some(&'\\');
+        let has_unclosed_quote = quote_char.is_some();
+        let needs_continuation = has_backslash_continuation || has_unclosed_quote;
+        
+        if needs_continuation {
             print!("> ");
-            if let Err(e) = stdout().flush() {
+            if let Err(e) =stdout().flush() {
                 eprintln!("Failed to flush stdout: {e}");
                 break;
             }
@@ -218,16 +223,34 @@ pub fn split(command: &str) -> Vec<String> {
                 Ok(0) => {
                     break;
                 }
-                Ok(_) => chars.extend(next_line.chars()),
+                Ok(_) => {
+                    if has_backslash_continuation {
+                        if next_line == "\n" {
+                            chars.pop();
+                            break;
+                        }
+                        if next_line.trim_end() == "\\" {
+                            continue;
+                        }
+                        
+                        chars.pop(); // Remove the trailing backslash
+                        let start_pos = chars.len();
+                        chars.extend(next_line.chars());
+                        // Continue from where we added the new content
+                        i = start_pos;
+                    } else {
+                        word.push('\n');
+                        chars.extend(next_line.chars());
+                    }
+                    continue;
+                }
                 Err(e) => {
                     eprintln!("Failed to read line: {e}");
                     break;
                 }
             }
-            if first_line {
-                word.push('\n');
-                first_line = false;
-            }
+        } else {
+            break;
         }
     }
 
@@ -235,19 +258,19 @@ pub fn split(command: &str) -> Vec<String> {
         result.push(word);
         quoted_words.push(word_was_quoted);
     }
-
+    
     result
         .into_iter()
         .zip(quoted_words)
         .map(|(cmd, quoted)| {
-            if !quoted
-                && cmd.starts_with('~')
-                && (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
+            if !quoted &&
+                cmd.starts_with('~') &&
+                (cmd.len() == 1 || cmd.chars().nth(1) == Some('/'))
             {
-                if let Ok(home) = env::var("HOME") {
-                    format!("{}{}", home, &cmd[1..])
-                } else {
-                    cmd
+                if let Ok(home) = env::var("HOME") { 
+                    format!("{}{}", home, &cmd[1..]) 
+                } else { 
+                    cmd 
                 }
             } else {
                 cmd
