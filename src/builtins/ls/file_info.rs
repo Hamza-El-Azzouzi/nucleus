@@ -1,16 +1,4 @@
-use chrono::{DateTime, Duration, TimeZone, Utc};
-use chrono_tz::Africa::Casablanca;
-
-use std::{
-    ffi::CStr,
-    fs::Metadata,
-    os::unix::fs::{FileTypeExt, MetadataExt},
-    path::PathBuf,
-};
-
-use crate::builtins::ls::file_permissions::get_major_minor;
-
-use super::{file_permissions::get_permissions, formatter::format_path, parser::Flag};
+use crate::prelude::*;
 
 pub fn get_detailed_file_info(
     path: PathBuf,

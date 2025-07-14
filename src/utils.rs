@@ -1,6 +1,4 @@
-use crate::color::*;
-use regex::Regex;
-use std::{env, path::PathBuf};
+use crate::prelude::*;
 
 pub fn clean_string(s: String) -> String {
     s.chars()

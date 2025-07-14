@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use crate::prelude::*;
 
 pub fn mv(args: Vec<String>) {
     let (sources, dest) = args.split_at(args.len() - 1);

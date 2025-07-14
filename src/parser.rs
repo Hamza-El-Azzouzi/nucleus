@@ -1,7 +1,5 @@
-use std::env;
-use std::io::{Write, stdin, stdout};
+use crate::prelude::*;
 
-use std::string::String;
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Echo(Vec<String>),

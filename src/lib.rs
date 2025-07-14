@@ -1,6 +1,6 @@
 pub mod builtins;
-pub mod parser;
-pub mod executor;
-pub mod utils;
-pub mod errors;
 pub mod color;
+pub mod executor;
+pub mod parser;
+pub mod prelude;
+pub mod utils;

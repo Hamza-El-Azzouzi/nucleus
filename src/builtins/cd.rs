@@ -1,22 +1,20 @@
-use std::{ env, path::Path };
+use crate::prelude::*;
 
 pub fn cd(args: Vec<String>) {
     match args.len() {
         0 => change_to_home(),
-        _ =>
-            match args[0].as_str() {
-                "-" => change_to_previous(),
-                "~" => change_to_home(),
-                path if path.starts_with("~/") =>
-                    match env::var("HOME") {
-                        Ok(home_dir) => {
-                            let expanded_path = path.replace("~", &home_dir);
-                            change_dir(&expanded_path);
-                        }
-                        Err(_) => println!("cd: HOME environment variable not set"),
-                    }
-                path => change_dir(path),
-            }
+        _ => match args[0].as_str() {
+            "-" => change_to_previous(),
+            "~" => change_to_home(),
+            path if path.starts_with("~/") => match env::var("HOME") {
+                Ok(home_dir) => {
+                    let expanded_path = path.replace("~", &home_dir);
+                    change_dir(&expanded_path);
+                }
+                Err(_) => println!("cd: HOME environment variable not set"),
+            },
+            path => change_dir(path),
+        },
     }
 }
 

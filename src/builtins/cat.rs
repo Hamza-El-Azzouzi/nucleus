@@ -1,7 +1,5 @@
-use super::pwd;
-use std::fs;
-use std::io::{ self, BufRead };
-use std::path::{ Path, PathBuf };
+use crate::prelude::*;
+
 pub fn cat(files: Vec<String>) {
     if files.is_empty() {
         let stdin = io::stdin();

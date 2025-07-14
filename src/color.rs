@@ -1,6 +1,4 @@
-use colored::Colorize;
-
-use crate::builtins::ls::Flag;
+use crate::prelude::*;
 
 pub enum Color {
     Red,

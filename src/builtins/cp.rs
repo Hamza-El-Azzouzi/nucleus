@@ -1,7 +1,4 @@
-use std::fs::copy;
-use std::path::{Path, PathBuf};
-
-use super::pwd;
+use crate::prelude::*;
 
 pub fn cp(args: Vec<String>) {
     let src = args[0..args.len() - 1].to_vec();

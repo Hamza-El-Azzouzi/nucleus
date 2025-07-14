@@ -1,7 +1,4 @@
-use shell::parser::*;
-use shell::{executor::execute, utils::print_cur_dir};
-use std::env::current_dir;
-use std::io::{Write, stdin, stdout};
+use shell::prelude::*;
 
 fn main() {
     loop {
