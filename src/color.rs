@@ -61,7 +61,7 @@ pub fn colorize_pipe(file_name: &mut String, flags: &Flag) {
 pub fn colorize_socket(file_name: &mut String, flags: &Flag) {
     *file_name = colorize(file_name, Color::Pink, false);
     if flags.f {
-        file_name.push('|');
+        file_name.push('=');
     }
 }
 
