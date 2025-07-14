@@ -1,5 +1,4 @@
-use crate::builtins::*;
-use crate::parser::Command;
+use crate::prelude::*;
 
 pub fn execute(command: Command) {
     match command {
@@ -10,7 +9,7 @@ pub fn execute(command: Command) {
         Command::Mkdir(args) => mkdir::mkdir(args),
         Command::Mv(args) => mv::mv(args),
         Command::Cp(args) => cp::cp(args),
-        Command::Pwd => println!("{}",pwd::pwd()),
+        Command::Pwd => println!("{}", pwd::pwd()),
         Command::Rm(args, recursive) => rm::rm(args, recursive),
         _ => {}
     }

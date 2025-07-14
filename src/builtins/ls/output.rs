@@ -1,10 +1,4 @@
-use std::collections::HashMap;
-
-use terminal_size::{Width, terminal_size};
-
-use crate::utils::strip_ansi_codes;
-
-use super::{Directory, formatter::format_detailed_file_info, parser::Flag};
+use crate::prelude::*;
 
 pub struct LsOutput;
 

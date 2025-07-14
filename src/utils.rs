@@ -1,5 +1,4 @@
-use regex::Regex;
-use std::{env, path::PathBuf};
+use crate::prelude::*;
 
 pub fn clean_string(s: String) -> String {
     s.chars()
@@ -23,7 +22,7 @@ pub fn print_cur_dir(path: PathBuf) {
         current_path.to_string()
     };
 
-    let prompt = format!("{} $ ", display_path);
+    let prompt = format!("{display_path} $ ");
 
     print!("{prompt}");
 }

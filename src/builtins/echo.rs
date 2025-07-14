@@ -31,7 +31,7 @@ fn process_escape(arg: &str) -> String {
             '\\' => {
                 if let Some(next_char) = chars.next() {
                     match next_char {
-                        'n' => result.push_str("\n"),
+                        'n' => result.push('\n'),
                         'r' => result.push('\r'),
                         't' => result.push('\t'),
                         '\\' => result.push('\\'),

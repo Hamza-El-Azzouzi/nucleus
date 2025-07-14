@@ -1,8 +1,4 @@
-use std::{
-    fs::Metadata,
-    os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt},
-    path::PathBuf,
-};
+use crate::prelude::*;
 
 pub fn get_permissions(metadata: &Metadata, path: PathBuf) -> String {
     let mode = metadata.permissions().mode();
@@ -123,4 +119,8 @@ pub fn get_major_minor(metadata: &Metadata) -> (u64, u64) {
     let minor = (dev & 0xff) | ((dev >> 12) & !0xff);
 
     (major, minor)
+}
+
+pub fn is_executable(mode: &u32) -> bool {
+    mode & 0o111 != 0
 }

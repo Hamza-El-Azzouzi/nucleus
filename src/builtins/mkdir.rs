@@ -1,4 +1,4 @@
-use std::fs;
+use crate::prelude::*;
 
 pub fn mkdir(args: Vec<String>) {
     let mut errors = Vec::new();

@@ -1,13 +1,4 @@
-use std::{fs::read_dir, path::PathBuf};
-
-use crate::{builtins::ls::formatter::quote_if_needed, utils::clean_string};
-
-use super::{
-    Directory,
-    file_info::get_detailed_file_info,
-    formatter::{add_dot_entries, format_path},
-    parser::Flag,
-};
+use crate::prelude::*;
 
 pub struct LsProcessor;
 

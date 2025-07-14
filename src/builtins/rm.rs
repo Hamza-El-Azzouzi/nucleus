@@ -1,4 +1,4 @@
-use std::{ env, fs };
+use crate::prelude::*;
 
 pub fn rm(args: Vec<String>, recursive: bool) {
     let cur_dir = match env::current_dir() {
@@ -11,10 +11,7 @@ pub fn rm(args: Vec<String>, recursive: bool) {
 
     for elem in args {
         if elem.chars().all(|c| c == '.' || c == '/') {
-            eprintln!(
-                "rm: refusing to remove '.' or '..' directory: skipping '{elem}'",
-                
-            );
+            eprintln!("rm: refusing to remove '.' or '..' directory: skipping '{elem}'",);
             continue;
         }
 
@@ -32,11 +29,13 @@ pub fn rm(args: Vec<String>, recursive: bool) {
         } else if path.is_dir() {
             if recursive {
                 if let Err(err) = fs::remove_dir_all(&path) {
-                    eprintln!("rm: Failed to remove file '{elem}': {err}" );
+                    eprintln!("rm: Failed to remove file '{elem}': {err}");
                     continue;
                 }
             } else {
-                eprintln!("rm: cannot remove '{elem}': Is a directory. Use -r to remove recursively.");
+                eprintln!(
+                    "rm: cannot remove '{elem}': Is a directory. Use -r to remove recursively."
+                );
                 continue;
             }
         } else {

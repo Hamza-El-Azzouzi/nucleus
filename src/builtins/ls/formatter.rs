@@ -1,19 +1,4 @@
-use std::{
-    collections::HashMap,
-    fs,
-    os::unix::fs::{FileTypeExt, PermissionsExt},
-    path::{Path, PathBuf},
-};
-
-use crate::{
-    color::{
-        Color, colorize, colorize_device, colorize_dir, colorize_executable, colorize_pipe,
-        colorize_socket, colorize_symlink,
-    },
-    utils::strip_ansi_codes,
-};
-
-use super::{file_info::get_detailed_file_info, parser::Flag};
+use crate::prelude::*;
 
 pub fn add_dot_entries(
     dir: PathBuf,
@@ -31,13 +16,8 @@ pub fn add_dot_entries(
 
         let mut dot_info =
             get_detailed_file_info(dot_path, &mut dot, Some(total_blocks), max_len, flags)?;
-        let mut dotdot_info = get_detailed_file_info(
-            dotdot_path,
-            &mut dotdot,
-            Some(total_blocks),
-            max_len,
-            flags,
-        )?;
+        let mut dotdot_info =
+            get_detailed_file_info(dotdot_path, &mut dotdot, Some(total_blocks), max_len, flags)?;
 
         dot_info[6] = dot;
         dotdot_info[6] = dotdot;
@@ -114,10 +94,6 @@ pub fn format_path(path: PathBuf, file_name: &mut String, flags: &Flag) -> Resul
     }
 
     Ok(())
-}
-
-fn is_executable(mode: &u32) -> bool {
-    mode & 0o111 != 0
 }
 
 fn format_symlink(path: &Path, file_name: &mut String, flags: &Flag) -> Result<(), String> {
