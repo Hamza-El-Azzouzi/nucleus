@@ -24,11 +24,7 @@ pub fn print_cur_dir(path: PathBuf) {
         current_path.to_string()
     };
 
-    let prompt = format!(
-        "{} {} ",
-        colorize(&display_path, Color::Blue, true),
-        colorize("$", Color::Red, true)
-    );
+    let prompt = format!("{} $ ", display_path);
 
     print!("{prompt}");
 }
