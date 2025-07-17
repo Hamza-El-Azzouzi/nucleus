@@ -14,7 +14,7 @@ fn main() {
                 break;
             }
         }
-        
+
         let mut input = String::new();
 
         match stdin().read_line(&mut input) {
@@ -39,7 +39,7 @@ fn main() {
             Err(error) if error == "No command entered" => {
                 continue;
             }
-            Err(err) => println!("{err}"),
+            Err(err) => eprintln!("{err}"),
         }
     }
 }
